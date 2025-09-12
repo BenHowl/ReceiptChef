@@ -1,4 +1,4 @@
-import { type User, type InsertUser } from "@shared/schema";
+import { type User, type InsertUser, type Receipt, type InsertReceipt } from "@shared/schema";
 import { randomUUID } from "crypto";
 
 // modify the interface with any CRUD methods
@@ -8,13 +8,21 @@ export interface IStorage {
   getUser(id: string): Promise<User | undefined>;
   getUserByUsername(username: string): Promise<User | undefined>;
   createUser(user: InsertUser): Promise<User>;
+  
+  // Receipt methods
+  getReceipt(id: string): Promise<Receipt | undefined>;
+  createReceipt(receipt: InsertReceipt): Promise<Receipt>;
+  updateReceipt(id: string, receipt: Partial<Receipt>): Promise<Receipt | undefined>;
+  getAllReceipts(): Promise<Receipt[]>;
 }
 
 export class MemStorage implements IStorage {
   private users: Map<string, User>;
+  private receipts: Map<string, Receipt>;
 
   constructor() {
     this.users = new Map();
+    this.receipts = new Map();
   }
 
   async getUser(id: string): Promise<User | undefined> {
@@ -32,6 +40,38 @@ export class MemStorage implements IStorage {
     const user: User = { ...insertUser, id };
     this.users.set(id, user);
     return user;
+  }
+
+  async getReceipt(id: string): Promise<Receipt | undefined> {
+    return this.receipts.get(id);
+  }
+
+  async createReceipt(insertReceipt: InsertReceipt): Promise<Receipt> {
+    const id = randomUUID();
+    const receipt: Receipt = { 
+      ...insertReceipt, 
+      id,
+      ingredients: [],
+      mealPlans: [],
+      createdAt: new Date()
+    };
+    this.receipts.set(id, receipt);
+    return receipt;
+  }
+
+  async updateReceipt(id: string, updates: Partial<Receipt>): Promise<Receipt | undefined> {
+    const receipt = this.receipts.get(id);
+    if (!receipt) return undefined;
+    
+    const updatedReceipt = { ...receipt, ...updates };
+    this.receipts.set(id, updatedReceipt);
+    return updatedReceipt;
+  }
+
+  async getAllReceipts(): Promise<Receipt[]> {
+    return Array.from(this.receipts.values()).sort((a, b) => 
+      new Date(b.createdAt!).getTime() - new Date(a.createdAt!).getTime()
+    );
   }
 }
 

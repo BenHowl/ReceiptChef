@@ -8,6 +8,7 @@ import RecipeCard from '@/components/RecipeCard';
 import MealPlanCard from '@/components/MealPlanCard';
 import RecipeModal from '@/components/RecipeModal';
 import ThemeToggle from '@/components/ThemeToggle';
+import { useToast } from '@/hooks/use-toast';
 import type { Recipe, MealPlan } from '@shared/schema';
 import heroImage from '@assets/generated_images/Hero_ingredients_with_receipt_ecfb1571.png';
 
@@ -19,124 +20,88 @@ export default function Home() {
   const [mealPlans, setMealPlans] = useState<MealPlan[]>([]);
   const [selectedRecipe, setSelectedRecipe] = useState<Recipe | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const { toast } = useToast();
 
-  const handleImageUpload = (file: File) => {
+  const handleImageUpload = async (file: File) => {
     const imageUrl = URL.createObjectURL(file);
     setUploadedImage(imageUrl);
     setIsProcessing(true);
     
-    // todo: remove mock functionality - Simulate processing
-    setTimeout(() => {
-      setIngredients([
-        'Chicken breast',
-        'Cherry tomatoes',
-        'Fresh basil',
-        'Olive oil',
-        'Garlic',
-        'Pasta',
-        'Parmesan cheese',
-        'Bell peppers',
-        'Onions',
-        'Mushrooms'
-      ]);
+    try {
+      // Step 1: Get upload URL from backend
+      const uploadResponse = await fetch('/api/receipts/upload', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' }
+      });
       
-      setRecipes([
-        {
-          id: '1',
-          title: 'Mediterranean Chicken Pasta',
-          description: 'A delicious pasta dish with grilled chicken, cherry tomatoes, and fresh basil in olive oil',
-          ingredients: ['Chicken breast', 'Pasta', 'Cherry tomatoes', 'Fresh basil', 'Olive oil', 'Garlic'],
-          instructions: [
-            'Cook pasta according to package directions',
-            'Season and grill chicken breast, then slice',
-            'Sauté garlic in olive oil',
-            'Add cherry tomatoes and cook until soft',
-            'Toss pasta with chicken and vegetables',
-            'Garnish with fresh basil'
-          ],
-          cookingTime: 25,
-          servings: 4,
-          difficulty: 'medium',
-          mealType: 'dinner'
-        },
-        {
-          id: '2',
-          title: 'Stuffed Bell Peppers',
-          description: 'Bell peppers stuffed with a savory mixture of vegetables and cheese',
-          ingredients: ['Bell peppers', 'Onions', 'Mushrooms', 'Garlic', 'Parmesan cheese'],
-          instructions: [
-            'Preheat oven to 375°F',
-            'Cut tops off peppers and remove seeds',
-            'Sauté onions, mushrooms, and garlic',
-            'Stuff peppers with vegetable mixture',
-            'Top with Parmesan cheese',
-            'Bake for 25-30 minutes'
-          ],
-          cookingTime: 35,
-          servings: 4,
-          difficulty: 'easy',
-          mealType: 'lunch'
-        },
-        {
-          id: '3',
-          title: 'Garlic Roasted Chicken',
-          description: 'Tender roasted chicken with aromatic garlic and herbs',
-          ingredients: ['Chicken breast', 'Garlic', 'Olive oil', 'Fresh basil'],
-          instructions: [
-            'Preheat oven to 400°F',
-            'Rub chicken with olive oil and minced garlic',
-            'Season with salt and pepper',
-            'Roast for 20-25 minutes',
-            'Garnish with fresh basil'
-          ],
-          cookingTime: 30,
-          servings: 2,
-          difficulty: 'easy',
-          mealType: 'dinner'
-        }
-      ]);
-
-      setMealPlans([
-        {
-          id: '1',
-          day: 'Monday',
-          generatedAt: new Date().toISOString(),
-          recipes: [
-            {
-              id: '4',
-              title: 'Garlic Mushroom Breakfast',
-              description: 'Sautéed mushrooms with garlic served with toast',
-              ingredients: ['Mushrooms', 'Garlic', 'Olive oil'],
-              instructions: ['Sauté mushrooms with garlic', 'Serve with toast'],
-              cookingTime: 15,
-              servings: 1,
-              difficulty: 'easy',
-              mealType: 'breakfast'
-            }
-          ]
-        },
-        {
-          id: '2',
-          day: 'Tuesday',
-          generatedAt: new Date().toISOString(),
-          recipes: [
-            {
-              id: '5',
-              title: 'Tomato Basil Salad',
-              description: 'Fresh cherry tomatoes with basil and olive oil dressing',
-              ingredients: ['Cherry tomatoes', 'Fresh basil', 'Olive oil'],
-              instructions: ['Slice tomatoes', 'Mix with basil and olive oil'],
-              cookingTime: 10,
-              servings: 2,
-              difficulty: 'easy',
-              mealType: 'lunch'
-            }
-          ]
-        }
-      ]);
+      if (!uploadResponse.ok) {
+        throw new Error('Failed to get upload URL');
+      }
       
+      const { uploadURL } = await uploadResponse.json();
+      
+      // Step 2: Upload file to object storage
+      const fileUploadResponse = await fetch(uploadURL, {
+        method: 'PUT',
+        body: file,
+        headers: { 'Content-Type': file.type }
+      });
+      
+      if (!fileUploadResponse.ok) {
+        throw new Error('Failed to upload file');
+      }
+      
+      // Step 3: Create receipt record
+      const receiptResponse = await fetch('/api/receipts', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ imageUrl: uploadURL })
+      });
+      
+      if (!receiptResponse.ok) {
+        throw new Error('Failed to create receipt record');
+      }
+      
+      const receipt = await receiptResponse.json();
+      
+      // Step 4: Process receipt with OpenAI Vision
+      const processResponse = await fetch(`/api/receipts/${receipt.id}/process`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' }
+      });
+      
+      if (!processResponse.ok) {
+        throw new Error('Failed to process receipt');
+      }
+      
+      const processedReceipt = await processResponse.json();
+      
+      // Update UI with real data
+      setIngredients(processedReceipt.ingredients || []);
+      setMealPlans(processedReceipt.mealPlans || []);
+      
+      // Extract all recipes from meal plans
+      const allRecipes: Recipe[] = [];
+      processedReceipt.mealPlans?.forEach((mealPlan: MealPlan) => {
+        allRecipes.push(...mealPlan.recipes);
+      });
+      setRecipes(allRecipes);
+      
+      toast({
+        title: "Receipt processed successfully!",
+        description: `Found ${processedReceipt.ingredients?.length || 0} ingredients and generated ${allRecipes.length} recipes.`
+      });
+      
+    } catch (error) {
+      console.error('Error processing receipt:', error);
+      toast({
+        title: "Error processing receipt",
+        description: "Please try again with a clear receipt image.",
+        variant: "destructive"
+      });
+    } finally {
       setIsProcessing(false);
-    }, 3000);
+    }
   };
 
   const handleRemoveImage = () => {
