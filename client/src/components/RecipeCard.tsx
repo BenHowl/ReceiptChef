@@ -30,55 +30,59 @@ export default function RecipeCard({ recipe, onViewDetails }: RecipeCardProps) {
   };
 
   return (
-    <Card className="hover-elevate transition-all duration-200" data-testid={`card-recipe-${recipe.id}`}>
-      <CardHeader className="pb-3">
+    <Card className="hover-elevate transition-all duration-200 cursor-pointer" data-testid={`card-recipe-${recipe.id}`} onClick={() => {
+      console.log('Recipe card clicked:', recipe.title);
+      onViewDetails?.(recipe);
+    }}>
+      <CardHeader className="pb-3 md:pb-4">
         {recipe.image && (
-          <div className="aspect-video rounded-lg overflow-hidden mb-3">
+          <div className="aspect-video rounded-md md:rounded-lg overflow-hidden mb-3 md:mb-4">
             <img 
               src={recipe.image} 
               alt={recipe.title}
-              className="w-full h-full object-cover"
+              className="w-full h-full object-cover transition-transform hover:scale-105"
               data-testid={`img-recipe-${recipe.id}`}
             />
           </div>
         )}
-        <div className="space-y-2">
-          <div className="flex items-start justify-between gap-2">
-            <h3 className="font-semibold text-lg leading-tight" data-testid={`text-recipe-title-${recipe.id}`}>
+        <div className="space-y-2 md:space-y-3">
+          <div className="flex items-start justify-between gap-2 md:gap-3">
+            <h3 className="font-semibold text-base sm:text-lg leading-tight flex-1 min-w-0" data-testid={`text-recipe-title-${recipe.id}`}>
               {recipe.title}
             </h3>
-            <Badge className={getMealTypeColor(recipe.mealType)} data-testid={`badge-meal-type-${recipe.id}`}>
+            <Badge className={`${getMealTypeColor(recipe.mealType)} text-xs shrink-0`} data-testid={`badge-meal-type-${recipe.id}`}>
               {recipe.mealType}
             </Badge>
           </div>
-          <p className="text-muted-foreground text-sm line-clamp-2" data-testid={`text-recipe-description-${recipe.id}`}>
+          <p className="text-muted-foreground text-sm sm:text-base line-clamp-2" data-testid={`text-recipe-description-${recipe.id}`}>
             {recipe.description}
           </p>
         </div>
       </CardHeader>
 
-      <CardContent className="py-3">
-        <div className="flex items-center justify-between text-sm text-muted-foreground">
+      <CardContent className="py-3 md:py-4">
+        <div className="flex items-center justify-between gap-2 text-xs sm:text-sm text-muted-foreground">
           <div className="flex items-center gap-1">
-            <Clock className="h-4 w-4" />
-            <span data-testid={`text-cooking-time-${recipe.id}`}>{recipe.cookingTime} min</span>
+            <Clock className="h-3 w-3 sm:h-4 sm:w-4" />
+            <span data-testid={`text-cooking-time-${recipe.id}`} className="whitespace-nowrap">{recipe.cookingTime}m</span>
           </div>
           <div className="flex items-center gap-1">
-            <Users className="h-4 w-4" />
-            <span data-testid={`text-servings-${recipe.id}`}>{recipe.servings} servings</span>
+            <Users className="h-3 w-3 sm:h-4 sm:w-4" />
+            <span data-testid={`text-servings-${recipe.id}`} className="whitespace-nowrap">{recipe.servings} servings</span>
           </div>
-          <Badge className={getDifficultyColor(recipe.difficulty)} data-testid={`badge-difficulty-${recipe.id}`}>
-            <ChefHat className="h-3 w-3 mr-1" />
+          <Badge className={`${getDifficultyColor(recipe.difficulty)} text-xs`} data-testid={`badge-difficulty-${recipe.id}`}>
+            <ChefHat className="h-2 w-2 sm:h-3 sm:w-3 mr-1" />
             {recipe.difficulty}
           </Badge>
         </div>
       </CardContent>
 
-      <CardFooter className="pt-3">
+      <CardFooter className="pt-3 md:pt-4">
         <Button 
-          className="w-full" 
+          className="w-full min-h-11 text-sm md:text-base" 
           variant="outline"
-          onClick={() => {
+          onClick={(e) => {
+            e.stopPropagation();
             console.log('View recipe details:', recipe.title);
             onViewDetails?.(recipe);
           }}

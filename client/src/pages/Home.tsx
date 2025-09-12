@@ -158,17 +158,17 @@ export default function Home() {
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Header */}
+      {/* Header - Mobile First */}
       <header className="border-b bg-card/50 backdrop-blur-sm sticky top-0 z-40">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-16">
+        <div className="mx-auto px-4">
+          <div className="flex items-center justify-between h-14 md:h-16">
             <div className="flex items-center gap-3">
               <div className="p-2 bg-primary/10 rounded-lg">
                 <ChefHat className="h-6 w-6 text-primary" />
               </div>
               <div>
-                <h1 className="text-xl font-semibold" data-testid="text-app-title">Recipe Generator</h1>
-                <p className="text-xs text-muted-foreground">Transform receipts into meal plans</p>
+                <h1 className="text-lg sm:text-xl font-semibold" data-testid="text-app-title">Recipe Generator</h1>
+                <p className="text-xs text-muted-foreground hidden sm:block">Transform receipts into meal plans</p>
               </div>
             </div>
             <ThemeToggle />
@@ -176,10 +176,10 @@ export default function Home() {
         </div>
       </header>
 
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Hero Section */}
-        <section className="text-center mb-12">
-          <div className="relative aspect-[16/9] max-w-4xl mx-auto mb-8 rounded-xl overflow-hidden">
+      <main className="px-4 py-6 md:py-8 md:max-w-7xl md:mx-auto md:px-6 lg:px-8">
+        {/* Hero Section - Mobile First */}
+        <section className="text-center mb-6 md:mb-12">
+          <div className="relative aspect-[4/3] sm:aspect-[3/2] md:aspect-[16/9] md:max-w-4xl mx-auto mb-6 md:mb-8 rounded-lg md:rounded-xl overflow-hidden">
             <img 
               src={heroImage}
               alt="Fresh ingredients with grocery receipt"
@@ -187,12 +187,12 @@ export default function Home() {
               data-testid="img-hero"
             />
             <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent" />
-            <div className="absolute inset-0 flex items-center justify-center text-white">
-              <div className="text-center space-y-4">
-                <h2 className="text-3xl md:text-5xl font-bold">
+            <div className="absolute inset-0 flex items-center justify-center text-white p-4">
+              <div className="text-center space-y-2 md:space-y-4 max-w-sm sm:max-w-lg md:max-w-2xl">
+                <h2 className="text-xl xs:text-2xl sm:text-3xl md:text-5xl font-bold">
                   Turn Receipts into Recipes
                 </h2>
-                <p className="text-lg md:text-xl max-w-2xl">
+                <p className="text-sm sm:text-base md:text-lg lg:text-xl">
                   Upload your grocery receipt and let AI create personalized meal plans based on what you've purchased
                 </p>
               </div>
@@ -201,7 +201,7 @@ export default function Home() {
         </section>
 
         {/* Upload Section */}
-        <section className="mb-12">
+        <section className="mb-8 md:mb-12">
           <ReceiptUpload 
             onImageUpload={handleImageUpload}
             isProcessing={isProcessing}
@@ -210,12 +210,12 @@ export default function Home() {
           />
         </section>
 
-        {/* Results Section */}
+        {/* Results Section - Mobile First */}
         {(ingredients.length > 0 || isProcessing) && (
-          <section className="space-y-8">
-            {/* Ingredients */}
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-              <div className="lg:col-span-1">
+          <section className="space-y-6 md:space-y-8">
+            {/* Mobile: Stack all components, Desktop: 1/3 - 2/3 layout */}
+            <div className="space-y-6 md:space-y-0 md:grid md:grid-cols-1 lg:grid-cols-3 md:gap-8">
+              <div className="order-1 lg:order-1 lg:col-span-1">
                 <IngredientsList 
                   ingredients={ingredients}
                   onIngredientsChange={setIngredients}
@@ -223,17 +223,19 @@ export default function Home() {
               </div>
 
               {/* Generated Recipes */}
-              <div className="lg:col-span-2 space-y-6">
+              <div className="order-2 lg:order-2 lg:col-span-2 space-y-6">
                 {recipes.length > 0 && (
                   <div>
-                    <div className="flex items-center justify-between mb-6">
-                      <h2 className="text-2xl font-semibold flex items-center gap-2" data-testid="text-recipes-title">
-                        <Sparkles className="h-6 w-6 text-primary" />
+                    <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between mb-6">
+                      <h2 className="text-xl sm:text-2xl font-semibold flex items-center gap-2" data-testid="text-recipes-title">
+                        <Sparkles className="h-5 w-5 sm:h-6 sm:w-6 text-primary" />
                         Generated Recipes
                       </h2>
                       <Button 
                         onClick={generateMoreRecipes}
                         variant="outline"
+                        className="w-full sm:w-auto"
+                        size="default"
                         data-testid="button-generate-more"
                       >
                         Generate More
@@ -254,8 +256,8 @@ export default function Home() {
                 {/* Meal Plans */}
                 {mealPlans.length > 0 && (
                   <div>
-                    <h2 className="text-2xl font-semibold flex items-center gap-2 mb-6" data-testid="text-meal-plans-title">
-                      <Calendar className="h-6 w-6 text-primary" />
+                    <h2 className="text-xl sm:text-2xl font-semibold flex items-center gap-2 mb-6" data-testid="text-meal-plans-title">
+                      <Calendar className="h-5 w-5 sm:h-6 sm:w-6 text-primary" />
                       Weekly Meal Plans
                     </h2>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -278,10 +280,10 @@ export default function Home() {
           </section>
         )}
 
-        {/* Empty State */}
+        {/* Empty State - Mobile First */}
         {!uploadedImage && !isProcessing && (
-          <section className="text-center py-16 space-y-8">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-4xl mx-auto">
+          <section className="text-center py-8 md:py-16 space-y-6 md:space-y-8">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6 md:max-w-4xl md:mx-auto">
               <Card className="p-6">
                 <CardContent className="pt-6 text-center space-y-3">
                   <div className="p-3 bg-primary/10 rounded-full w-fit mx-auto">

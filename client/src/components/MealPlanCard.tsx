@@ -23,53 +23,53 @@ export default function MealPlanCard({ mealPlan, onRecipeClick }: MealPlanCardPr
 
   return (
     <Card className="hover-elevate" data-testid={`card-meal-plan-${mealPlan.id}`}>
-      <CardHeader className="pb-4">
-        <div className="flex items-center justify-between">
-          <CardTitle className="flex items-center gap-2 text-lg">
-            <Calendar className="h-5 w-5 text-primary" />
+      <CardHeader className="pb-3 md:pb-4">
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+          <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
+            <Calendar className="h-4 w-4 sm:h-5 sm:w-5 text-primary" />
             <span data-testid={`text-meal-plan-day-${mealPlan.id}`}>{mealPlan.day}</span>
           </CardTitle>
-          <div className="flex items-center gap-1 text-sm text-muted-foreground">
-            <Clock className="h-4 w-4" />
-            <span data-testid={`text-total-time-${mealPlan.id}`}>{totalCookingTime} min total</span>
+          <div className="flex items-center gap-1 text-xs sm:text-sm text-muted-foreground">
+            <Clock className="h-3 w-3 sm:h-4 sm:w-4" />
+            <span data-testid={`text-total-time-${mealPlan.id}`} className="whitespace-nowrap">{totalCookingTime}m total</span>
           </div>
         </div>
-        <p className="text-sm text-muted-foreground">
+        <p className="text-xs sm:text-sm text-muted-foreground">
           {mealPlan.recipes.length} recipe{mealPlan.recipes.length !== 1 ? 's' : ''} planned
         </p>
       </CardHeader>
 
-      <CardContent className="space-y-3">
+      <CardContent className="space-y-2 md:space-y-3">
         {mealPlan.recipes.map((recipe) => (
           <div 
             key={recipe.id}
-            className="p-3 rounded-lg border bg-card/50 hover-elevate cursor-pointer transition-colors"
+            className="p-3 md:p-4 rounded-md md:rounded-lg border bg-card/50 hover-elevate cursor-pointer transition-colors min-h-16 md:min-h-20 flex items-center"
             onClick={() => {
               console.log('Recipe clicked:', recipe.title);
               onRecipeClick?.(recipe.id);
             }}
             data-testid={`recipe-item-${recipe.id}`}
           >
-            <div className="flex items-start justify-between gap-3">
+            <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between w-full">
               <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-2 mb-1">
-                  <h4 className="font-medium text-sm truncate" data-testid={`text-recipe-name-${recipe.id}`}>
+                <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:gap-2">
+                  <h4 className="font-medium text-sm sm:text-base truncate" data-testid={`text-recipe-name-${recipe.id}`}>
                     {recipe.title}
                   </h4>
                   <Badge 
-                    className={`${getMealTypeColor(recipe.mealType)} text-xs`}
+                    className={`${getMealTypeColor(recipe.mealType)} text-xs w-fit`}
                     data-testid={`badge-recipe-type-${recipe.id}`}
                   >
                     {recipe.mealType}
                   </Badge>
                 </div>
-                <p className="text-xs text-muted-foreground line-clamp-1">
+                <p className="text-xs sm:text-sm text-muted-foreground line-clamp-1 mt-1">
                   {recipe.description}
                 </p>
               </div>
-              <div className="flex flex-col items-end text-xs text-muted-foreground">
-                <span data-testid={`text-recipe-time-${recipe.id}`}>{recipe.cookingTime}m</span>
-                <span data-testid={`text-recipe-servings-${recipe.id}`}>{recipe.servings} servings</span>
+              <div className="flex items-center gap-3 sm:flex-col sm:items-end text-xs text-muted-foreground mt-1 sm:mt-0">
+                <span data-testid={`text-recipe-time-${recipe.id}`} className="whitespace-nowrap">{recipe.cookingTime}m</span>
+                <span data-testid={`text-recipe-servings-${recipe.id}`} className="whitespace-nowrap">{recipe.servings} servings</span>
               </div>
             </div>
           </div>

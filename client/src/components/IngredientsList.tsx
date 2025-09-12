@@ -49,47 +49,47 @@ export default function IngredientsList({
 
   return (
     <Card data-testid="card-ingredients-list">
-      <CardHeader className="pb-4">
-        <CardTitle className="text-lg" data-testid="text-ingredients-title">
+      <CardHeader className="pb-3 md:pb-4">
+        <CardTitle className="text-base sm:text-lg" data-testid="text-ingredients-title">
           {title}
         </CardTitle>
         {ingredients.length > 0 && (
-          <p className="text-sm text-muted-foreground">
+          <p className="text-xs sm:text-sm text-muted-foreground">
             {ingredients.length} ingredient{ingredients.length !== 1 ? 's' : ''} found
           </p>
         )}
       </CardHeader>
 
-      <CardContent className="space-y-4">
+      <CardContent className="space-y-3 md:space-y-4">
         {ingredients.length === 0 ? (
-          <div className="text-center py-8 text-muted-foreground">
-            <p data-testid="text-no-ingredients">No ingredients detected yet</p>
-            <p className="text-sm">Upload a receipt to get started</p>
+          <div className="text-center py-6 md:py-8 text-muted-foreground">
+            <p className="text-sm" data-testid="text-no-ingredients">No ingredients detected yet</p>
+            <p className="text-xs sm:text-sm">Upload a receipt to get started</p>
           </div>
         ) : (
-          <div className="space-y-2">
+          <div className="space-y-2 md:space-y-3">
             {ingredients.map((ingredient, index) => (
               <div 
                 key={index}
-                className="flex items-center justify-between p-3 rounded-lg border bg-card/50"
+                className="flex items-center justify-between p-3 md:p-4 rounded-md md:rounded-lg border bg-card/50 min-h-12 md:min-h-14"
                 data-testid={`ingredient-item-${index}`}
               >
-                <div className="flex items-center gap-3 flex-1">
+                <div className="flex items-center gap-3 flex-1 min-w-0">
                   <Button
                     size="icon"
                     variant="ghost"
-                    className="h-6 w-6"
+                    className="h-10 w-10 md:h-8 md:w-8 shrink-0"
                     onClick={() => toggleIngredientCheck(ingredient)}
                     data-testid={`button-check-ingredient-${index}`}
                   >
                     {checkedIngredients.has(ingredient) ? (
-                      <Check className="h-4 w-4 text-green-600" />
+                      <Check className="h-5 w-5 md:h-4 md:w-4 text-green-600" />
                     ) : (
-                      <div className="h-4 w-4 rounded border-2 border-muted-foreground" />
+                      <div className="h-5 w-5 md:h-4 md:w-4 rounded border-2 border-muted-foreground" />
                     )}
                   </Button>
                   <span 
-                    className={`flex-1 ${checkedIngredients.has(ingredient) ? 'line-through text-muted-foreground' : ''}`}
+                    className={`flex-1 text-sm md:text-base truncate ${checkedIngredients.has(ingredient) ? 'line-through text-muted-foreground' : ''}`}
                     data-testid={`text-ingredient-${index}`}
                   >
                     {ingredient}
@@ -100,7 +100,7 @@ export default function IngredientsList({
                   <Button
                     size="icon"
                     variant="ghost"
-                    className="h-6 w-6 text-destructive hover:text-destructive"
+                    className="h-10 w-10 md:h-8 md:w-8 text-destructive hover:text-destructive shrink-0"
                     onClick={() => handleRemoveIngredient(ingredient)}
                     data-testid={`button-remove-ingredient-${index}`}
                   >
@@ -113,27 +113,30 @@ export default function IngredientsList({
         )}
 
         {!readOnly && (
-          <div className="flex gap-2 pt-2">
+          <div className="flex flex-col gap-2 sm:flex-row pt-2">
             <Input
               placeholder="Add custom ingredient..."
               value={newIngredient}
               onChange={(e) => setNewIngredient(e.target.value)}
               onKeyDown={(e) => e.key === 'Enter' && handleAddIngredient()}
+              className="flex-1 h-11"
               data-testid="input-new-ingredient"
             />
             <Button 
               onClick={handleAddIngredient}
               disabled={!newIngredient.trim()}
+              className="h-11 w-full sm:w-auto px-6"
               data-testid="button-add-ingredient"
             >
-              <Plus className="h-4 w-4" />
+              <Plus className="h-4 w-4 mr-2 sm:mr-0" />
+              <span className="sm:hidden">Add Ingredient</span>
             </Button>
           </div>
         )}
 
         {checkedIngredients.size > 0 && (
-          <div className="pt-2 border-t">
-            <Badge variant="secondary" data-testid="badge-checked-count">
+          <div className="pt-3 border-t">
+            <Badge variant="secondary" className="text-xs" data-testid="badge-checked-count">
               {checkedIngredients.size} ingredient{checkedIngredients.size !== 1 ? 's' : ''} checked off
             </Badge>
           </div>
