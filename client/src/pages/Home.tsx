@@ -154,10 +154,10 @@ export default function Home() {
             <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent" />
             <div className="absolute inset-0 flex items-center justify-center text-white p-4">
               <div className="text-center space-y-2 md:space-y-4 max-w-sm sm:max-w-lg md:max-w-2xl">
-                <h2 className="text-xl xs:text-2xl sm:text-3xl md:text-5xl font-bold">
+                <h2 className="text-xl xs:text-2xl sm:text-3xl md:text-5xl font-bold drop-shadow-md">
                   Turn Receipts into Recipes
                 </h2>
-                <p className="text-sm sm:text-base md:text-lg lg:text-xl">
+                <p className="text-sm sm:text-base md:text-lg lg:text-xl drop-shadow-sm">
                   Upload your grocery receipt and let AI create personalized meal plans based on what you've purchased
                 </p>
               </div>
