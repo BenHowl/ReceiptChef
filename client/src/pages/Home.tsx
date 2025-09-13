@@ -10,7 +10,7 @@ import RecipeModal from '@/components/RecipeModal';
 import ThemeToggle from '@/components/ThemeToggle';
 import { useToast } from '@/hooks/use-toast';
 import type { Recipe, MealPlan } from '@shared/schema';
-import heroImage from '@assets/generated_images/Hero_ingredients_with_receipt_ecfb1571.png';
+import heroImage from '@assets/generated_images/hero_image_cutting_board.png';
 
 export default function Home() {
   const [uploadedImage, setUploadedImage] = useState<string | null>(null);
@@ -144,29 +144,22 @@ export default function Home() {
       <main className="px-4 py-6 md:py-8 md:max-w-7xl md:mx-auto md:px-6 lg:px-8">
         {/* Hero Section - Mobile First */}
         <section className="text-center mb-6 md:mb-12">
-          {/* Cutting Board Background */}
-          <div className="relative max-w-5xl mx-auto p-4 md:p-8">
-            <div className="absolute inset-4 md:inset-8 bg-gradient-to-br from-amber-100 to-amber-200 dark:from-amber-900 dark:to-amber-800 rounded-2xl shadow-2xl transform rotate-1"></div>
-            <div className="absolute inset-6 md:inset-10 bg-gradient-to-br from-amber-50 to-amber-100 dark:from-amber-800 dark:to-amber-700 rounded-xl shadow-lg"></div>
-            
-            {/* Main Hero Content */}
-            <div className="relative aspect-[4/3] sm:aspect-[3/2] md:aspect-[16/9] md:max-w-4xl mx-auto mb-6 md:mb-8 rounded-lg md:rounded-xl overflow-hidden shadow-xl">
-              <img 
-                src={heroImage}
-                alt="Fresh ingredients with grocery receipt"
-                className="w-full h-full object-cover"
-                data-testid="img-hero"
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-black/20" />
-              <div className="absolute inset-0 flex items-center justify-center text-white p-4">
-                <div className="text-center space-y-2 md:space-y-4 max-w-sm sm:max-w-lg md:max-w-2xl">
-                  <h2 className="text-xl xs:text-2xl sm:text-3xl md:text-5xl font-bold drop-shadow-lg [text-shadow:_2px_2px_0_rgb(0_0_0_/_40%)]">
-                    Turn Receipts into Recipes
-                  </h2>
-                  <p className="text-sm sm:text-base md:text-lg lg:text-xl drop-shadow-md [text-shadow:_1px_1px_0_rgb(0_0_0_/_60%)]">
-                    Upload your grocery receipt and let AI create personalized meal plans based on what you've purchased
-                  </p>
-                </div>
+          <div className="relative aspect-[4/3] sm:aspect-[3/2] md:aspect-[16/9] md:max-w-4xl mx-auto mb-6 md:mb-8 rounded-lg md:rounded-xl overflow-hidden">
+            <img 
+              src={heroImage}
+              alt="Fresh ingredients with grocery receipt"
+              className="w-full h-full object-cover"
+              data-testid="img-hero"
+            />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent" />
+            <div className="absolute inset-0 flex items-center justify-center text-white p-4">
+              <div className="text-center space-y-2 md:space-y-4 max-w-sm sm:max-w-lg md:max-w-2xl">
+                <h2 className="text-xl xs:text-2xl sm:text-3xl md:text-5xl font-bold">
+                  Turn Receipts into Recipes
+                </h2>
+                <p className="text-sm sm:text-base md:text-lg lg:text-xl">
+                  Upload your grocery receipt and let AI create personalized meal plans based on what you've purchased
+                </p>
               </div>
             </div>
           </div>
