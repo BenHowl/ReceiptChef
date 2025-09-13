@@ -28,7 +28,19 @@ export default function ReceiptUpload({
   // Check camera support on mount
   useEffect(() => {
     const checkCameraSupport = () => {
+      // Camera requires HTTPS (except localhost)
+      const isSecureContext = window.isSecureContext;
+      const isLocalhost = window.location.hostname === 'localhost' || 
+                         window.location.hostname === '127.0.0.1';
+      
+      if (!isSecureContext && !isLocalhost) {
+        setCameraError('Camera requires HTTPS. Please use the published app or file upload instead.');
+        setIsCameraSupported(false);
+        return;
+      }
+      
       if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+        setCameraError('Camera not supported on this device or browser');
         setIsCameraSupported(false);
       }
     };
@@ -113,9 +125,21 @@ export default function ReceiptUpload({
       if (videoRef.current) {
         videoRef.current.srcObject = mediaStream;
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Camera access failed:', error);
-      setCameraError('Camera access denied or not available');
+      
+      // Provide specific error messages
+      if (error.name === 'NotAllowedError') {
+        setCameraError('Camera permission denied. Please allow camera access and try again.');
+      } else if (error.name === 'NotFoundError') {
+        setCameraError('No camera found on this device.');
+      } else if (error.name === 'NotReadableError') {
+        setCameraError('Camera is already in use by another app.');
+      } else if (!window.isSecureContext) {
+        setCameraError('Camera requires HTTPS. Please publish your app or use file upload.');
+      } else {
+        setCameraError('Camera not available. Please use file upload instead.');
+      }
       setIsCameraSupported(false);
     }
   }, []);
@@ -353,9 +377,19 @@ export default function ReceiptUpload({
               Take a photo or upload an image of your grocery receipt
             </p>
             {cameraError && (
-              <p className="text-xs text-destructive bg-destructive/10 p-2 rounded">
-                {cameraError}
-              </p>
+              <div className="bg-amber-50 dark:bg-amber-950 border border-amber-200 dark:border-amber-800 p-3 rounded-md">
+                <p className="text-xs text-amber-800 dark:text-amber-200 flex items-start gap-2">
+                  <Smartphone className="h-4 w-4 mt-0.5 flex-shrink-0" />
+                  <span>
+                    {cameraError}
+                    {!window.isSecureContext && (
+                      <span className="block mt-1 font-semibold">
+                        Tip: The "Take Photo (Mobile)" button below will still work on your phone!
+                      </span>
+                    )}
+                  </span>
+                </p>
+              </div>
             )}
           </div>
 
@@ -372,24 +406,48 @@ export default function ReceiptUpload({
               </Button>
             )}
             
+            {/* Mobile Camera Capture (works without HTTPS) */}
+            {!isCameraSupported && (
+              <label htmlFor="mobile-camera-capture" className="block">
+                <Button 
+                  asChild 
+                  className="w-full h-12 text-base cursor-pointer" 
+                  data-testid="button-mobile-camera"
+                >
+                  <span>
+                    <Camera className="h-5 w-5 mr-2" />
+                    Take Photo (Mobile)
+                  </span>
+                </Button>
+                <input
+                  id="mobile-camera-capture"
+                  type="file"
+                  accept="image/*"
+                  capture="environment"
+                  className="hidden"
+                  onChange={handleFileSelect}
+                  data-testid="input-camera-capture"
+                />
+              </label>
+            )}
+            
             {/* File Upload Button */}
             <label htmlFor="receipt-upload" className="block">
               <Button 
                 asChild 
-                variant={isCameraSupported ? "outline" : "default"}
+                variant="outline"
                 className="w-full h-12 text-base cursor-pointer" 
                 data-testid="button-browse-files"
               >
                 <span>
                   <ImageIcon className="h-5 w-5 mr-2" />
-                  {isCameraSupported ? "Browse Files" : "Upload Image"}
+                  Browse Files
                 </span>
               </Button>
               <input
                 id="receipt-upload"
                 type="file"
                 accept="image/*"
-                capture={isCameraSupported ? undefined : "environment"}
                 className="hidden"
                 onChange={handleFileSelect}
                 data-testid="input-file-upload"
