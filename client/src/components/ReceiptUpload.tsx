@@ -402,60 +402,31 @@ export default function ReceiptUpload({
             <p className="text-sm md:text-base text-muted-foreground">
               Take a photo or upload an image of your grocery receipt
             </p>
-            {cameraError && (
-              <div className="bg-amber-50 dark:bg-amber-950 border border-amber-200 dark:border-amber-800 p-3 rounded-md">
-                <p className="text-xs text-amber-800 dark:text-amber-200 flex items-start gap-2">
-                  <Smartphone className="h-4 w-4 mt-0.5 flex-shrink-0" />
-                  <span>
-                    {cameraError}
-                    {!window.isSecureContext && (
-                      <span className="block mt-1 font-semibold">
-                        Tip: The "Take Photo (Mobile)" button below will still work on your phone!
-                      </span>
-                    )}
-                  </span>
-                </p>
-              </div>
-            )}
           </div>
 
           <div className="space-y-3 md:space-y-4">
-            {/* Camera Button */}
-            {isCameraSupported && (
-              <Button
-                onClick={startCamera}
-                className="w-full h-12 text-base"
-                data-testid="button-open-camera"
+            {/* Primary Camera Button - Works on phones even without HTTPS */}
+            <label htmlFor="mobile-camera-capture" className="block">
+              <Button 
+                asChild 
+                className="w-full h-14 text-base cursor-pointer bg-primary hover:bg-primary/90" 
+                data-testid="button-mobile-camera"
               >
-                <Camera className="h-5 w-5 mr-2" />
-                Take Photo
+                <span>
+                  <Camera className="h-6 w-6 mr-2" />
+                  Take Photo with Camera
+                </span>
               </Button>
-            )}
-            
-            {/* Mobile Camera Capture (works without HTTPS) */}
-            {!isCameraSupported && (
-              <label htmlFor="mobile-camera-capture" className="block">
-                <Button 
-                  asChild 
-                  className="w-full h-12 text-base cursor-pointer" 
-                  data-testid="button-mobile-camera"
-                >
-                  <span>
-                    <Camera className="h-5 w-5 mr-2" />
-                    Take Photo (Mobile)
-                  </span>
-                </Button>
-                <input
-                  id="mobile-camera-capture"
-                  type="file"
-                  accept="image/*"
-                  capture="environment"
-                  className="hidden"
-                  onChange={handleFileSelect}
-                  data-testid="input-camera-capture"
-                />
-              </label>
-            )}
+              <input
+                id="mobile-camera-capture"
+                type="file"
+                accept="image/*"
+                capture="environment"
+                className="hidden"
+                onChange={handleFileSelect}
+                data-testid="input-camera-capture"
+              />
+            </label>
             
             {/* File Upload Button */}
             <label htmlFor="receipt-upload" className="block">
@@ -467,7 +438,7 @@ export default function ReceiptUpload({
               >
                 <span>
                   <ImageIcon className="h-5 w-5 mr-2" />
-                  Browse Files
+                  Choose from Gallery
                 </span>
               </Button>
               <input
@@ -481,14 +452,7 @@ export default function ReceiptUpload({
             </label>
             
             <p className="text-xs text-muted-foreground">
-              {isCameraSupported ? (
-                <>
-                  <Smartphone className="h-3 w-3 inline mr-1" />
-                  Best results with good lighting and clear text
-                </>
-              ) : (
-                "Supports JPG, PNG, and other image formats"
-              )}
+              <strong>Tip:</strong> On mobile, tap "Take Photo with Camera" to use your phone's camera
             </p>
           </div>
         </div>
