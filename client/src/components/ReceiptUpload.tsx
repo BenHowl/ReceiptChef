@@ -56,6 +56,16 @@ export default function ReceiptUpload({
     };
   }, [stream]);
 
+  // Ensure video plays when stream changes
+  useEffect(() => {
+    if (stream && videoRef.current) {
+      videoRef.current.srcObject = stream;
+      videoRef.current.play().catch(err => {
+        console.log('Video autoplay failed, user interaction may be required:', err);
+      });
+    }
+  }, [stream]);
+
   // Image compression utility
   const compressImage = useCallback((file: File): Promise<File> => {
     return new Promise((resolve) => {
@@ -122,9 +132,20 @@ export default function ReceiptUpload({
       setStream(mediaStream);
       setIsCameraMode(true);
       
-      if (videoRef.current) {
-        videoRef.current.srcObject = mediaStream;
-      }
+      // Wait for next tick to ensure video element is rendered
+      setTimeout(async () => {
+        if (videoRef.current && mediaStream) {
+          videoRef.current.srcObject = mediaStream;
+          
+          // Explicitly play the video (required for some mobile browsers)
+          try {
+            await videoRef.current.play();
+            console.log('Camera stream started successfully');
+          } catch (playError) {
+            console.error('Failed to play video:', playError);
+          }
+        }
+      }, 100);
     } catch (error: any) {
       console.error('Camera access failed:', error);
       
@@ -311,7 +332,12 @@ export default function ReceiptUpload({
                 autoPlay
                 playsInline
                 muted
+                onLoadedMetadata={(e) => {
+                  const video = e.target as HTMLVideoElement;
+                  video.play().catch(err => console.log('Video play error:', err));
+                }}
                 className="w-full aspect-[4/3] object-cover"
+                style={{ WebkitTransform: 'translateZ(0)' }} // Hardware acceleration for iOS
                 data-testid="video-camera-preview"
               />
               
