@@ -1,7 +1,7 @@
 // OpenAI service for the Recipe Generator app
 // Using code from the javascript_openai blueprint
 import OpenAI from "openai";
-import type { Recipe, MealPlan } from "@shared/schema";
+import type { Recipe, MealPlan } from "../shared/schema";
 
 /*
 Follow these instructions when using this blueprint:
