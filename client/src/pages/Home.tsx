@@ -149,7 +149,7 @@ export default function Home() {
                 <ChefHat className="h-6 w-6 text-primary" />
               </div>
               <div>
-                <h1 className="text-lg sm:text-xl font-semibold" data-testid="text-app-title">Recipe Generator</h1>
+                <h1 className="text-lg sm:text-xl font-semibold" data-testid="text-app-title">ReceiptChef</h1>
                 <p className="text-xs text-muted-foreground hidden sm:block">Transform receipts into meal plans</p>
               </div>
             </div>
