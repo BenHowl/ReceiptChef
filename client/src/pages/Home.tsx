@@ -28,56 +28,47 @@ export default function Home() {
     setIsProcessing(true);
     
     try {
-      // Step 1: Get upload URL from backend
-      const uploadResponse = await fetch('/api/receipts/upload', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' }
-      });
-      
-      if (!uploadResponse.ok) {
-        throw new Error('Failed to get upload URL');
-      }
-      
-      const { uploadURL } = await uploadResponse.json();
-      
-      // Step 2: Upload file to object storage
-      const fileUploadResponse = await fetch(uploadURL, {
+      // Step 1: Upload file directly to Vercel Blob
+      const filename = `receipts/${Date.now()}.jpg`;
+      const formData = new FormData();
+      formData.append('file', file);
+
+      const uploadResponse = await fetch(`/api/upload-direct?filename=${encodeURIComponent(filename)}`, {
         method: 'PUT',
         body: file,
         headers: { 'Content-Type': file.type }
       });
 
-      if (!fileUploadResponse.ok) {
+      if (!uploadResponse.ok) {
         throw new Error('Failed to upload file');
       }
 
-      // Get the actual blob URL from the upload response
-      const uploadResult = await fileUploadResponse.json();
-      const actualImageUrl = uploadResult.url || uploadResult.downloadUrl;
+      const uploadResult = await uploadResponse.json();
+      const imageUrl = uploadResult.url || uploadResult.downloadUrl;
 
-      // Step 3: Create receipt record with the actual blob URL
-      const receiptResponse = await fetch('/api/receipts', {
+      // Step 2: Create and process receipt in one call
+      const receiptResponse = await fetch('/api/receipt-simple', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ imageUrl: actualImageUrl })
+        body: JSON.stringify({ imageUrl })
       });
-      
+
       if (!receiptResponse.ok) {
         throw new Error('Failed to create receipt record');
       }
-      
+
       const receipt = await receiptResponse.json();
-      
-      // Step 4: Process receipt with OpenAI Vision
-      const processResponse = await fetch(`/api/receipts/${receipt.id}/process`, {
+
+      // Step 3: Process the receipt
+      const processResponse = await fetch(`/api/receipt-simple?id=${receipt.id}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' }
       });
-      
+
       if (!processResponse.ok) {
         throw new Error('Failed to process receipt');
       }
-      
+
       const processedReceipt = await processResponse.json();
       
       // Update UI with real data
