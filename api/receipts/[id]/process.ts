@@ -1,7 +1,7 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { storage } from '../../../server/storage';
 import { VercelBlobStorageService, ObjectNotFoundError } from '../../../server/vercelBlobStorage';
-import { extractIngredientsFromReceipt } from '../../../server/openai';
+import { extractIngredientsFromReceipt, generateRecipesFromIngredients } from '../../../server/openai';
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (req.method !== 'POST') {
@@ -36,8 +36,11 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     // Extract ingredients from receipt using OpenAI Vision
     const ingredients = await extractIngredientsFromReceipt(base64Image);
 
-    // Update receipt with extracted ingredients
-    const updatedReceipt = await storage.updateReceipt(id as string, { ingredients });
+    // Generate meal plans from extracted ingredients
+    const mealPlans = await generateRecipesFromIngredients(ingredients);
+
+    // Update receipt with extracted ingredients and meal plans
+    const updatedReceipt = await storage.updateReceipt(id as string, { ingredients, mealPlans });
 
     res.json(updatedReceipt);
   } catch (error) {

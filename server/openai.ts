@@ -29,7 +29,7 @@ function getOpenAIClient(): OpenAI {
 // Helper function to try OpenAI request with fallback models
 async function tryOpenAIWithFallback<T>(
   requestFn: (client: OpenAI, model: string) => Promise<T>,
-  modelOrder: string[] = ["gpt-5", "gpt-4o", "gpt-4o-mini"]
+  modelOrder: string[] = ["gpt-4o", "gpt-4o-mini", "gpt-4-turbo"]
 ): Promise<T> {
   const client = getOpenAIClient();
   
@@ -65,7 +65,7 @@ export async function extractIngredientsFromReceipt(base64Image: string): Promis
   try {
     const visionResponse = await tryOpenAIWithFallback(async (client, model) => {
       return await client.chat.completions.create({
-        model, // Use fallback model system - starts with gpt-5, falls back to gpt-4o or gpt-4o-mini
+        model, // Use fallback model system - starts with gpt-4o, falls back to gpt-4o-mini or gpt-4-turbo
         messages: [
           {
             role: "system",
@@ -105,7 +105,7 @@ export async function generateRecipesFromIngredients(ingredients: string[]): Pro
   try {
     const response = await tryOpenAIWithFallback(async (client, model) => {
       return await client.chat.completions.create({
-        model, // Use fallback model system - starts with gpt-5, falls back to gpt-4o or gpt-4o-mini
+        model, // Use fallback model system - starts with gpt-4o, falls back to gpt-4o-mini or gpt-4-turbo
         messages: [
           {
             role: "system",
