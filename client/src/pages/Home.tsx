@@ -28,21 +28,52 @@ export default function Home() {
     setIsProcessing(true);
     
     try {
+      // Check file size (mobile browsers have stricter limits)
+      const maxSizeMB = 10; // 10MB limit
+      if (file.size > maxSizeMB * 1024 * 1024) {
+        throw new Error(`File too large. Please use an image smaller than ${maxSizeMB}MB.`);
+      }
+
+      console.log('Processing file:', {
+        name: file.name,
+        size: file.size,
+        type: file.type,
+        isMobile: /Mobi|Android/i.test(navigator.userAgent)
+      });
+
       // Convert file to base64 and process directly
       const reader = new FileReader();
 
       const base64Promise = new Promise<string>((resolve, reject) => {
         reader.onload = () => {
-          const result = reader.result as string;
-          // Remove data URL prefix to get just the base64 string
-          const base64 = result.split(',')[1];
-          resolve(base64);
+          try {
+            const result = reader.result as string;
+            if (!result || typeof result !== 'string') {
+              reject(new Error('Failed to read file as data URL'));
+              return;
+            }
+            // Remove data URL prefix to get just the base64 string
+            const base64 = result.split(',')[1];
+            if (!base64) {
+              reject(new Error('Failed to extract base64 from data URL'));
+              return;
+            }
+            console.log('Base64 conversion successful, length:', base64.length);
+            resolve(base64);
+          } catch (error) {
+            reject(error);
+          }
         };
-        reader.onerror = reject;
+        reader.onerror = (error) => {
+          console.error('FileReader error:', error);
+          reject(new Error('Failed to read file'));
+        };
       });
 
       reader.readAsDataURL(file);
       const base64Image = await base64Promise;
+
+      console.log('Sending request to /api/process-base64...');
 
       // Process receipt directly with base64 image
       const processResponse = await fetch('/api/process-base64', {
@@ -51,12 +82,16 @@ export default function Home() {
         body: JSON.stringify({ base64Image })
       });
 
+      console.log('Response status:', processResponse.status);
+
       if (!processResponse.ok) {
         const errorText = await processResponse.text();
+        console.error('API error response:', errorText);
         throw new Error(`Failed to process receipt: ${errorText}`);
       }
 
       const processedReceipt = await processResponse.json();
+      console.log('Processing successful:', processedReceipt);
       
       // Update UI with real data
       setIngredients(processedReceipt.ingredients || []);
