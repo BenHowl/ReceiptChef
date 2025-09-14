@@ -145,7 +145,7 @@ export default function Home() {
         <div className="mx-auto px-4">
           <div className="flex items-center justify-between h-14 md:h-16">
             <div className="flex items-center gap-3">
-              <div className="p-2 bg-primary/10 rounded-lg">
+              <div className="flex items-center justify-center">
                 <img src="/icons/icon.png" alt="ReceiptChef" className="h-8 w-8 md:h-10 md:w-10" />
               </div>
               <div>
