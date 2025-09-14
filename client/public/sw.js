@@ -1,8 +1,8 @@
 // ReceiptChef Service Worker
-const CACHE_NAME = 'receiptchef-v1';
+const CACHE_NAME = 'receiptchef-v2';
 const urlsToCache = [
   '/',
-  '/icons/icon.svg',
+  '/icons/icon-optimized.svg',
   '/manifest.json'
 ];
 
