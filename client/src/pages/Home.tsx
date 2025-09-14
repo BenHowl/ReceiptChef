@@ -28,13 +28,9 @@ export default function Home() {
     setIsProcessing(true);
     
     try {
-      // Step 1: Upload file directly to Vercel Blob
-      const filename = `receipts/${Date.now()}.jpg`;
-      const formData = new FormData();
-      formData.append('file', file);
-
-      const uploadResponse = await fetch(`/api/upload-direct?filename=${encodeURIComponent(filename)}`, {
-        method: 'PUT',
+      // Step 1: Upload file to Vercel Blob
+      const uploadResponse = await fetch('/api/receipt-simple?action=upload', {
+        method: 'POST',
         body: file,
         headers: { 'Content-Type': file.type }
       });
@@ -46,23 +42,11 @@ export default function Home() {
       const uploadResult = await uploadResponse.json();
       const imageUrl = uploadResult.url || uploadResult.downloadUrl;
 
-      // Step 2: Create and process receipt in one call
-      const receiptResponse = await fetch('/api/receipt-simple', {
+      // Step 2: Process receipt with uploaded image URL (this does everything in one call)
+      const processResponse = await fetch('/api/receipt-simple', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ imageUrl })
-      });
-
-      if (!receiptResponse.ok) {
-        throw new Error('Failed to create receipt record');
-      }
-
-      const receipt = await receiptResponse.json();
-
-      // Step 3: Process the receipt
-      const processResponse = await fetch(`/api/receipt-simple?id=${receipt.id}`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' }
       });
 
       if (!processResponse.ok) {
