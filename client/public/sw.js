@@ -2,7 +2,7 @@
 const CACHE_NAME = 'receiptchef-v2';
 const urlsToCache = [
   '/',
-  '/icons/icon-optimized.svg',
+  '/icons/icon.png',
   '/manifest.json'
 ];
 
