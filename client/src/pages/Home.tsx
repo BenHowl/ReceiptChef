@@ -28,41 +28,32 @@ export default function Home() {
     setIsProcessing(true);
     
     try {
-      // Step 1: Get upload URL from backend
-      const uploadUrlResponse = await fetch('/api/receipts/upload', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' }
+      // Convert file to base64 and process directly
+      const reader = new FileReader();
+
+      const base64Promise = new Promise<string>((resolve, reject) => {
+        reader.onload = () => {
+          const result = reader.result as string;
+          // Remove data URL prefix to get just the base64 string
+          const base64 = result.split(',')[1];
+          resolve(base64);
+        };
+        reader.onerror = reject;
       });
 
-      if (!uploadUrlResponse.ok) {
-        throw new Error('Failed to get upload URL');
-      }
+      reader.readAsDataURL(file);
+      const base64Image = await base64Promise;
 
-      const { uploadURL } = await uploadUrlResponse.json();
-
-      // Step 2: Upload file to Vercel Blob
-      const uploadResponse = await fetch(uploadURL, {
-        method: 'PUT',
-        body: file,
-        headers: { 'Content-Type': file.type }
-      });
-
-      if (!uploadResponse.ok) {
-        throw new Error('Failed to upload file');
-      }
-
-      const uploadResult = await uploadResponse.json();
-      const imageUrl = uploadResult.url || uploadResult.downloadUrl;
-
-      // Step 3: Process receipt with uploaded image URL
-      const processResponse = await fetch('/api/receipt-simple', {
+      // Process receipt directly with base64 image
+      const processResponse = await fetch('/api/process-base64', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ imageUrl })
+        body: JSON.stringify({ base64Image })
       });
 
       if (!processResponse.ok) {
-        throw new Error('Failed to process receipt');
+        const errorText = await processResponse.text();
+        throw new Error(`Failed to process receipt: ${errorText}`);
       }
 
       const processedReceipt = await processResponse.json();
