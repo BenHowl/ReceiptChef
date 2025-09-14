@@ -161,29 +161,39 @@ Return a JSON object with this structure:
       try {
         const filename = `receipts/${randomUUID()}.jpg`;
 
-        // Get file from request body
-        let fileBuffer: Buffer;
-        if (req.body instanceof Buffer) {
-          fileBuffer = req.body;
-        } else if (typeof req.body === 'string') {
-          fileBuffer = Buffer.from(req.body, 'binary');
+        // For file uploads, we need to read the raw body
+        // Vercel handles this differently - we need to read from the raw request
+        const chunks: Buffer[] = [];
+
+        // Handle the request as a readable stream
+        const body = req as any;
+        if (body.body) {
+          // If body is already parsed
+          let fileBuffer: Buffer;
+          if (body.body instanceof Buffer) {
+            fileBuffer = body.body;
+          } else if (typeof body.body === 'string') {
+            fileBuffer = Buffer.from(body.body, 'binary');
+          } else {
+            fileBuffer = Buffer.from(JSON.stringify(body.body));
+          }
+
+          console.log('Upload attempt (parsed body):', { filename, bufferLength: fileBuffer.length, contentType: req.headers['content-type'] });
+
+          // Upload to Vercel Blob
+          const blob = await put(filename, fileBuffer, {
+            access: 'public',
+            contentType: req.headers['content-type'] || 'image/jpeg',
+          });
+
+          console.log('Upload success:', blob.url);
+          return res.json({
+            url: blob.url,
+            downloadUrl: blob.downloadUrl,
+          });
         } else {
-          fileBuffer = Buffer.from(req.body);
+          return res.status(400).json({ error: 'No file data received' });
         }
-
-        console.log('Upload attempt:', { filename, bufferLength: fileBuffer.length, contentType: req.headers['content-type'] });
-
-        // Upload to Vercel Blob
-        const blob = await put(filename, fileBuffer, {
-          access: 'public',
-          contentType: req.headers['content-type'] || 'image/jpeg',
-        });
-
-        console.log('Upload success:', blob.url);
-        return res.json({
-          url: blob.url,
-          downloadUrl: blob.downloadUrl,
-        });
       } catch (error) {
         console.error('Upload error details:', error);
         return res.status(500).json({ error: 'Upload failed', details: String(error) });

@@ -28,9 +28,21 @@ export default function Home() {
     setIsProcessing(true);
     
     try {
-      // Step 1: Upload file to Vercel Blob
-      const uploadResponse = await fetch('/api/receipt-simple?action=upload', {
+      // Step 1: Get upload URL from backend
+      const uploadUrlResponse = await fetch('/api/receipts/upload', {
         method: 'POST',
+        headers: { 'Content-Type': 'application/json' }
+      });
+
+      if (!uploadUrlResponse.ok) {
+        throw new Error('Failed to get upload URL');
+      }
+
+      const { uploadURL } = await uploadUrlResponse.json();
+
+      // Step 2: Upload file to Vercel Blob
+      const uploadResponse = await fetch(uploadURL, {
+        method: 'PUT',
         body: file,
         headers: { 'Content-Type': file.type }
       });
@@ -42,7 +54,7 @@ export default function Home() {
       const uploadResult = await uploadResponse.json();
       const imageUrl = uploadResult.url || uploadResult.downloadUrl;
 
-      // Step 2: Process receipt with uploaded image URL (this does everything in one call)
+      // Step 3: Process receipt with uploaded image URL
       const processResponse = await fetch('/api/receipt-simple', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
