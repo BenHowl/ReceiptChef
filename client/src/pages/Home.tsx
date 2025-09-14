@@ -146,7 +146,11 @@ export default function Home() {
           <div className="flex items-center justify-between h-14 md:h-16">
             <div className="flex items-center gap-3">
               <div className="flex items-center justify-center">
-                <img src="/icons/icon.png" alt="ReceiptChef" className="h-8 w-8 md:h-10 md:w-10" />
+                <img 
+                  src="/icons/icon.png" 
+                  alt="ReceiptChef" 
+                  className="h-8 w-8 md:h-10 md:w-10 hover:scale-105 transition-all duration-200 cursor-pointer" 
+                />
               </div>
               <div>
                 <h1 className="text-lg sm:text-xl font-semibold" data-testid="text-app-title">ReceiptChef</h1>
