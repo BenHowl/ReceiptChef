@@ -15,9 +15,5 @@
       "source": "/(.*)",
       "destination": "/index.html"
     }
-  ],
-  "env": {
-    "DATABASE_URL": "@database_url",
-    "OPENAI_API_KEY": "@openai_api_key"
-  }
+  ]
 }
