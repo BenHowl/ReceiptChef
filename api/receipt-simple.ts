@@ -165,9 +165,13 @@ Return a JSON object with this structure:
         let fileBuffer: Buffer;
         if (req.body instanceof Buffer) {
           fileBuffer = req.body;
+        } else if (typeof req.body === 'string') {
+          fileBuffer = Buffer.from(req.body, 'binary');
         } else {
           fileBuffer = Buffer.from(req.body);
         }
+
+        console.log('Upload attempt:', { filename, bufferLength: fileBuffer.length, contentType: req.headers['content-type'] });
 
         // Upload to Vercel Blob
         const blob = await put(filename, fileBuffer, {
@@ -175,13 +179,14 @@ Return a JSON object with this structure:
           contentType: req.headers['content-type'] || 'image/jpeg',
         });
 
+        console.log('Upload success:', blob.url);
         return res.json({
           url: blob.url,
           downloadUrl: blob.downloadUrl,
         });
       } catch (error) {
-        console.error('Upload error:', error);
-        return res.status(500).json({ error: 'Upload failed' });
+        console.error('Upload error details:', error);
+        return res.status(500).json({ error: 'Upload failed', details: String(error) });
       }
     }
 
