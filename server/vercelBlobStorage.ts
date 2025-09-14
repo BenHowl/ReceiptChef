@@ -15,12 +15,13 @@ export class VercelBlobStorageService {
   private token: string;
 
   constructor() {
-    this.token = process.env.BLOB_READ_WRITE_TOKEN;
-    if (!this.token) {
+    const token = process.env.BLOB_READ_WRITE_TOKEN;
+    if (!token) {
       throw new Error(
         "BLOB_READ_WRITE_TOKEN not set. Create a Vercel Blob store and set the environment variable."
       );
     }
+    this.token = token;
   }
 
   // Gets the upload URL for an object entity (simplified for Vercel Blob)
