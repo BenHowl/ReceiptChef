@@ -46,16 +46,20 @@ export default function Home() {
         body: file,
         headers: { 'Content-Type': file.type }
       });
-      
+
       if (!fileUploadResponse.ok) {
         throw new Error('Failed to upload file');
       }
-      
-      // Step 3: Create receipt record
+
+      // Get the actual blob URL from the upload response
+      const uploadResult = await fileUploadResponse.json();
+      const actualImageUrl = uploadResult.url || uploadResult.downloadUrl;
+
+      // Step 3: Create receipt record with the actual blob URL
       const receiptResponse = await fetch('/api/receipts', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ imageUrl: uploadURL })
+        body: JSON.stringify({ imageUrl: actualImageUrl })
       });
       
       if (!receiptResponse.ok) {

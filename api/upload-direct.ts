@@ -3,7 +3,7 @@ import { put } from '@vercel/blob';
 import { randomUUID } from 'crypto';
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
-  if (req.method !== 'POST') {
+  if (req.method !== 'PUT') {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
@@ -16,51 +16,36 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       });
     }
 
-    // Handle multipart form data or JSON body
-    const contentType = req.headers['content-type'] || '';
-    let fileBuffer: Buffer;
-    let filename: string;
-
-    if (contentType.includes('multipart/form-data')) {
-      // Handle multipart form upload (if using form data)
-      return res.status(400).json({
-        error: 'Multipart uploads not implemented yet. Use JSON body with base64 file data.'
-      });
-    } else if (contentType.includes('application/json')) {
-      // Handle JSON body with base64 file data
-      const { file, filename: providedFilename, contentType: fileContentType } = req.body;
-
-      if (!file) {
-        return res.status(400).json({ error: 'No file data provided' });
-      }
-
-      // Generate filename if not provided
-      filename = providedFilename || `receipts/${randomUUID()}.jpg`;
-
-      // Convert base64 to buffer
-      if (typeof file === 'string') {
-        // Remove data URL prefix if present (data:image/jpeg;base64,...)
-        const base64Data = file.replace(/^data:[^;]+;base64,/, '');
-        fileBuffer = Buffer.from(base64Data, 'base64');
-      } else {
-        fileBuffer = Buffer.from(file);
-      }
-
-      // Upload to Vercel Blob
-      const blob = await put(filename, fileBuffer, {
-        access: 'public',
-        contentType: fileContentType || 'image/jpeg',
-      });
-
-      res.json({
-        url: blob.url,
-        downloadUrl: blob.downloadUrl,
-        pathname: blob.pathname,
-        size: blob.size,
-      });
-    } else {
-      return res.status(400).json({ error: 'Unsupported content type' });
+    // Get filename from query parameter
+    const { filename } = req.query;
+    if (!filename || typeof filename !== 'string') {
+      return res.status(400).json({ error: 'Filename parameter required' });
     }
+
+    // Get file data from request body (raw binary data from frontend)
+    const contentType = req.headers['content-type'] || 'image/jpeg';
+
+    // Convert the request body to a buffer
+    let fileBuffer: Buffer;
+    if (req.body instanceof Buffer) {
+      fileBuffer = req.body;
+    } else if (typeof req.body === 'string') {
+      fileBuffer = Buffer.from(req.body, 'binary');
+    } else {
+      fileBuffer = Buffer.from(req.body);
+    }
+
+    // Upload to Vercel Blob
+    const blob = await put(filename, fileBuffer, {
+      access: 'public',
+      contentType,
+    });
+
+    // Return the blob URL that matches what the client expects
+    res.status(200).json({
+      url: blob.url,
+      downloadUrl: blob.downloadUrl,
+    });
   } catch (error) {
     console.error('Error uploading to Vercel Blob:', error);
     res.status(500).json({ error: 'Failed to upload file' });
