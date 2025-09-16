@@ -1,6 +1,6 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { z } from 'zod';
-import { generateRecipesFromIngredients } from '../../server/openai';
+import { generateRecipesFromIngredients } from '../_lib/openai';
 
 const requestSchema = z.object({
   ingredients: z.array(z.string().trim().min(1)).min(1)
