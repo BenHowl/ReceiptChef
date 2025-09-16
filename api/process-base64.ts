@@ -1,5 +1,5 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import { extractIngredientsFromReceipt } from '../_lib/openai';
+import { extractIngredientsFromReceipt } from './_lib/openai';
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (req.method !== 'POST') {
