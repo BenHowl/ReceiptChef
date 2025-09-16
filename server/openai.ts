@@ -1,1 +1,1 @@
-export * from "../api/_lib/openai";
+export * from "../api/_lib/openai.js";
