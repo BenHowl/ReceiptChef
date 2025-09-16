@@ -15,7 +15,7 @@
   "functions": {
     "api/**/*.ts": {
       "maxDuration": 30,
-      "includeFiles": "server/**"
+      "includeFiles": "{server,shared}/**/*"
     }
   }
 }
