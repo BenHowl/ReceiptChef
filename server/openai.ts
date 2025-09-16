@@ -100,6 +100,43 @@ export async function extractIngredientsFromReceipt(base64Image: string): Promis
   }
 }
 
+export async function extractIngredientsFromFridge(base64Image: string): Promise<string[]> {
+  try {
+    const visionResponse = await tryOpenAIWithFallback(async (client, model) => {
+      return await client.chat.completions.create({
+        model,
+        messages: [
+          {
+            role: "system",
+            content:
+              "You inspect refrigerator photos and list groceries you can clearly identify. Return only JSON with an 'ingredients' array describing distinct food items. Use generic ingredient names, combine duplicate items, and skip anything you can't confidently recognize or that's not edible.",
+          },
+          {
+            role: "user",
+            content: [
+              { type: "text", text: "Look at this fridge photo and list every edible ingredient. Return JSON only." },
+              {
+                type: "image_url",
+                image_url: {
+                  url: `data:image/jpeg;base64,${base64Image}`,
+                },
+              },
+            ],
+          },
+        ],
+        response_format: { type: "json_object" },
+        max_tokens: 1000,
+      });
+    });
+
+    const result = JSON.parse(visionResponse.choices[0].message.content || '{"ingredients": []}');
+    return result.ingredients || [];
+  } catch (error) {
+    console.error("Error extracting fridge ingredients:", error);
+    throw new Error("Failed to extract ingredients from fridge photo");
+  }
+}
+
 // Generate recipes and meal plans from ingredients
 export async function generateRecipesFromIngredients(ingredients: string[]): Promise<MealPlan[]> {
   try {

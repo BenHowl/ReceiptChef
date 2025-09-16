@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { ChefHat, Upload, Sparkles, Calendar } from 'lucide-react';
+import { Upload, Sparkles, Calendar, Refrigerator, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import ReceiptUpload from '@/components/ReceiptUpload';
@@ -12,21 +12,98 @@ import { useToast } from '@/hooks/use-toast';
 import type { Recipe, MealPlan } from '@shared/schema';
 import heroImage from '@assets/generated_images/hero_image_cutting_board.png';
 
+const uploadModeConfig = {
+  receipt: {
+    endpoint: '/api/process-base64',
+    detectionSuccessTitle: 'Receipt scanned',
+    detectionSuccessDescription: (ingredientCount: number) =>
+      `Found ${ingredientCount} ingredient${ingredientCount === 1 ? '' : 's'}. Review and confirm before generating recipes.`,
+    detectionErrorTitle: 'Error processing receipt',
+    detectionErrorDescription: 'Please try again with a clear receipt image.',
+    noIngredientsTitle: 'No ingredients detected',
+    noIngredientsDescription: 'Try capturing another photo with the entire receipt in focus and good lighting.',
+    reviewMessage: 'Review the items we pulled from your receipt. Make any tweaks before generating meal plans.',
+    confirmButtonLabel: 'Generate Meal Plans',
+    generationSuccessTitle: 'Meal plans ready!',
+    generationSuccessDescription: (recipeCount: number) =>
+      `Generated ${recipeCount} recipe${recipeCount === 1 ? '' : 's'} from your receipt.`,
+    generationErrorTitle: 'Meal plan generation failed',
+    generationErrorDescription: 'Please try again after adjusting your ingredients.',
+    processingText: 'Processing receipt...',
+    uploadTitle: 'Upload Your Receipt',
+    uploadDescription: 'Take a photo or upload an image of your grocery receipt',
+    cameraButtonLabel: 'Take Photo with Camera',
+    galleryButtonLabel: 'Choose from Gallery',
+    frameGuideText: 'Center receipt in frame',
+    cameraTip: 'On mobile, tap "Take Photo with Camera" to use your phone\'s camera',
+    fileNamePrefix: 'receipt' as const,
+  },
+  fridge: {
+    endpoint: '/api/fridge/scan',
+    detectionSuccessTitle: 'Fridge scanned',
+    detectionSuccessDescription: (ingredientCount: number) =>
+      `Identified ${ingredientCount} ingredient${ingredientCount === 1 ? '' : 's'}. Review and confirm before generating recipes.`,
+    detectionErrorTitle: 'Error scanning fridge',
+    detectionErrorDescription: 'Try again with a well-lit photo of your fridge interior.',
+    noIngredientsTitle: 'No items detected',
+    noIngredientsDescription: 'Open the fridge and make sure the shelves are well lit before snapping another photo.',
+    reviewMessage: 'Double-check the fridge items we spotted and make edits before generating meal plans.',
+    confirmButtonLabel: 'Generate Meal Plans',
+    generationSuccessTitle: 'Meal plans ready!',
+    generationSuccessDescription: (recipeCount: number) =>
+      `Suggested ${recipeCount} recipe${recipeCount === 1 ? '' : 's'} based on your fridge.`,
+    generationErrorTitle: 'Meal plan generation failed',
+    generationErrorDescription: 'Please try again after adjusting your ingredient list.',
+    processingText: 'Analyzing fridge...',
+    uploadTitle: 'Scan Your Fridge',
+    uploadDescription: 'Snap a photo of your fridge shelves to find ingredients you already have',
+    cameraButtonLabel: 'Take Fridge Photo',
+    galleryButtonLabel: 'Upload Fridge Photo',
+    frameGuideText: 'Fill the frame with your fridge contents',
+    cameraTip: 'Open the fridge and make sure the shelves are well lit before taking the photo.',
+    fileNamePrefix: 'fridge' as const,
+  },
+} as const;
+
+type UploadMode = keyof typeof uploadModeConfig;
+
 export default function Home() {
+  const [uploadMode, setUploadMode] = useState<UploadMode>('receipt');
   const [uploadedImage, setUploadedImage] = useState<string | null>(null);
-  const [isProcessing, setIsProcessing] = useState(false);
+  const [processingSource, setProcessingSource] = useState<UploadMode | null>(null);
+  const isProcessing = processingSource !== null;
   const [ingredients, setIngredients] = useState<string[]>([]);
   const [recipes, setRecipes] = useState<Recipe[]>([]);
   const [mealPlans, setMealPlans] = useState<MealPlan[]>([]);
   const [selectedRecipe, setSelectedRecipe] = useState<Recipe | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [needsConfirmation, setNeedsConfirmation] = useState(false);
+  const [isGeneratingMealPlans, setIsGeneratingMealPlans] = useState(false);
+  const [lastDetectionMode, setLastDetectionMode] = useState<UploadMode | null>(null);
   const { toast } = useToast();
+  const activeConfig = uploadModeConfig[uploadMode];
+  const processingText = processingSource
+    ? uploadModeConfig[processingSource].processingText
+    : activeConfig.processingText;
+  const confirmationConfig = lastDetectionMode
+    ? uploadModeConfig[lastDetectionMode]
+    : activeConfig;
 
-  const handleImageUpload = async (file: File) => {
+  const processImage = async (file: File, source: UploadMode) => {
+    if (uploadedImage) {
+      URL.revokeObjectURL(uploadedImage);
+    }
     const imageUrl = URL.createObjectURL(file);
     setUploadedImage(imageUrl);
-    setIsProcessing(true);
-    
+    setProcessingSource(source);
+    setRecipes([]);
+    setMealPlans([]);
+    setIngredients([]);
+    setNeedsConfirmation(false);
+    setLastDetectionMode(null);
+
+    const config = uploadModeConfig[source];
+
     try {
       // Check file size (mobile browsers have stricter limits)
       const maxSizeMB = 10; // 10MB limit
@@ -34,17 +111,8 @@ export default function Home() {
         throw new Error(`File too large. Please use an image smaller than ${maxSizeMB}MB.`);
       }
 
-      console.log('Processing file:', {
-        name: file.name,
-        size: file.size,
-        type: file.type,
-        isMobile: /Mobi|Android/i.test(navigator.userAgent)
-      });
-
-      // Convert file to base64 and process directly
-      const reader = new FileReader();
-
-      const base64Promise = new Promise<string>((resolve, reject) => {
+      const base64Image = await new Promise<string>((resolve, reject) => {
+        const reader = new FileReader();
         reader.onload = () => {
           try {
             const result = reader.result as string;
@@ -52,13 +120,11 @@ export default function Home() {
               reject(new Error('Failed to read file as data URL'));
               return;
             }
-            // Remove data URL prefix to get just the base64 string
             const base64 = result.split(',')[1];
             if (!base64) {
               reject(new Error('Failed to extract base64 from data URL'));
               return;
             }
-            console.log('Base64 conversion successful, length:', base64.length);
             resolve(base64);
           } catch (error) {
             reject(error);
@@ -68,64 +134,139 @@ export default function Home() {
           console.error('FileReader error:', error);
           reject(new Error('Failed to read file'));
         };
+        reader.readAsDataURL(file);
       });
 
-      reader.readAsDataURL(file);
-      const base64Image = await base64Promise;
-
-      console.log('Sending request to /api/process-base64...');
-
-      // Process receipt directly with base64 image
-      const processResponse = await fetch('/api/process-base64', {
+      const processResponse = await fetch(config.endpoint, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ base64Image })
       });
 
-      console.log('Response status:', processResponse.status);
-
       if (!processResponse.ok) {
         const errorText = await processResponse.text();
-        console.error('API error response:', errorText);
-        throw new Error(`Failed to process receipt: ${errorText}`);
+        throw new Error(`Failed to process image: ${errorText}`);
       }
 
-      const processedReceipt = await processResponse.json();
-      console.log('Processing successful:', processedReceipt);
+      const processedResult = await processResponse.json();
+      const nextIngredients: string[] = processedResult.ingredients || [];
       
-      // Update UI with real data
-      setIngredients(processedReceipt.ingredients || []);
-      setMealPlans(processedReceipt.mealPlans || []);
-      
-      // Extract all recipes from meal plans
-      const allRecipes: Recipe[] = [];
-      processedReceipt.mealPlans?.forEach((mealPlan: MealPlan) => {
-        allRecipes.push(...mealPlan.recipes);
-      });
-      setRecipes(allRecipes);
-      
+      if (nextIngredients.length === 0) {
+        toast({
+          title: config.noIngredientsTitle,
+          description: config.noIngredientsDescription,
+          variant: 'destructive'
+        });
+        setNeedsConfirmation(false);
+        setLastDetectionMode(null);
+        return;
+      }
+
+      setIngredients(nextIngredients);
+      setLastDetectionMode(source);
+      setNeedsConfirmation(true);
+
       toast({
-        title: "Receipt processed successfully!",
-        description: `Found ${processedReceipt.ingredients?.length || 0} ingredients and generated ${allRecipes.length} recipes.`
+        title: config.detectionSuccessTitle,
+        description: config.detectionSuccessDescription(nextIngredients.length)
       });
-      
     } catch (error) {
-      console.error('Error processing receipt:', error);
+      console.error('Error processing image:', error);
       toast({
-        title: "Error processing receipt",
-        description: "Please try again with a clear receipt image.",
+        title: config.detectionErrorTitle,
+        description: config.detectionErrorDescription,
         variant: "destructive"
       });
+      setIngredients([]);
+      setNeedsConfirmation(false);
+      setLastDetectionMode(null);
     } finally {
-      setIsProcessing(false);
+      setProcessingSource(null);
     }
   };
 
+  const handleReceiptUpload = (file: File) => processImage(file, 'receipt');
+  const handleFridgeUpload = (file: File) => processImage(file, 'fridge');
+
+  const handleIngredientsChange = (updatedIngredients: string[]) => {
+    setIngredients(updatedIngredients);
+    if (updatedIngredients.length === 0) {
+      setMealPlans([]);
+      setRecipes([]);
+      setNeedsConfirmation(false);
+      return;
+    }
+    setMealPlans([]);
+    setRecipes([]);
+    setNeedsConfirmation(true);
+  };
+
   const handleRemoveImage = () => {
+    if (uploadedImage) {
+      URL.revokeObjectURL(uploadedImage);
+    }
     setUploadedImage(null);
     setIngredients([]);
     setRecipes([]);
     setMealPlans([]);
+    setProcessingSource(null);
+    setNeedsConfirmation(false);
+    setIsGeneratingMealPlans(false);
+    setLastDetectionMode(null);
+  };
+
+  const handleConfirmIngredients = async () => {
+    if (ingredients.length === 0) {
+      toast({
+        title: 'No ingredients to process',
+        description: 'Add at least one ingredient before generating meal plans.',
+        variant: 'destructive'
+      });
+      return;
+    }
+
+    const mode = lastDetectionMode ?? uploadMode;
+    const config = uploadModeConfig[mode];
+
+    try {
+      setIsGeneratingMealPlans(true);
+      const response = await fetch('/api/meal-plans/generate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ingredients })
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(errorText);
+      }
+
+      const data = await response.json();
+      const generatedMealPlans: MealPlan[] = data.mealPlans || [];
+      setMealPlans(generatedMealPlans);
+
+      const allRecipes: Recipe[] = [];
+      generatedMealPlans.forEach((mealPlan) => {
+        allRecipes.push(...mealPlan.recipes);
+      });
+      setRecipes(allRecipes);
+      setNeedsConfirmation(false);
+
+      toast({
+        title: config.generationSuccessTitle,
+        description: config.generationSuccessDescription(allRecipes.length)
+      });
+    } catch (error) {
+      console.error('Error generating meal plans:', error);
+      toast({
+        title: config.generationErrorTitle,
+        description: config.generationErrorDescription,
+        variant: 'destructive'
+      });
+      setNeedsConfirmation(true);
+    } finally {
+      setIsGeneratingMealPlans(false);
+    }
   };
 
   const handleViewRecipe = (recipe: Recipe) => {
@@ -179,7 +320,7 @@ export default function Home() {
                   Turn Receipts into Recipes
                 </h2>
                 <p className="text-sm sm:text-base md:text-lg lg:text-xl drop-shadow-md">
-                  Upload your grocery receipt and let AI create personalized meal plans based on what you've purchased
+                  Upload your grocery receipt or snap your fridge and let AI create personalized meal plans from what you already have
                 </p>
               </div>
             </div>
@@ -188,11 +329,40 @@ export default function Home() {
 
         {/* Upload Section */}
         <section className="mb-8 md:mb-12">
+          <div className="flex justify-center gap-2 mb-4">
+            <Button
+              variant={uploadMode === 'receipt' ? 'default' : 'outline'}
+              className="flex-1 sm:flex-none sm:min-w-[160px]"
+              onClick={() => setUploadMode('receipt')}
+              disabled={isProcessing}
+            >
+              <Upload className="h-4 w-4 mr-2" />
+              Receipt
+            </Button>
+            <Button
+              variant={uploadMode === 'fridge' ? 'default' : 'outline'}
+              className="flex-1 sm:flex-none sm:min-w-[160px]"
+              onClick={() => setUploadMode('fridge')}
+              disabled={isProcessing}
+            >
+              <Refrigerator className="h-4 w-4 mr-2" />
+              Fridge
+            </Button>
+          </div>
           <ReceiptUpload 
-            onImageUpload={handleImageUpload}
+            key={uploadMode}
+            onImageUpload={uploadMode === 'receipt' ? handleReceiptUpload : handleFridgeUpload}
             isProcessing={isProcessing}
             uploadedImage={uploadedImage}
             onRemoveImage={handleRemoveImage}
+            title={activeConfig.uploadTitle}
+            description={activeConfig.uploadDescription}
+            cameraButtonLabel={activeConfig.cameraButtonLabel}
+            galleryButtonLabel={activeConfig.galleryButtonLabel}
+            frameGuideText={activeConfig.frameGuideText}
+            processingText={processingText}
+            cameraTip={activeConfig.cameraTip}
+            fileNamePrefix={activeConfig.fileNamePrefix}
           />
         </section>
 
@@ -204,8 +374,48 @@ export default function Home() {
               <div className="order-1 lg:order-1 lg:col-span-1">
                 <IngredientsList 
                   ingredients={ingredients}
-                  onIngredientsChange={setIngredients}
+                  onIngredientsChange={handleIngredientsChange}
                 />
+                {ingredients.length > 0 && (
+                  <div className="mt-4 space-y-3">
+                    {needsConfirmation ? (
+                      <>
+                        <div className="rounded-lg border border-dashed bg-muted/40 p-3 text-xs sm:text-sm text-muted-foreground">
+                          {confirmationConfig.reviewMessage}
+                        </div>
+                        <div className="flex flex-col gap-2 sm:flex-row">
+                          <Button
+                            onClick={handleConfirmIngredients}
+                            disabled={isGeneratingMealPlans || isProcessing}
+                            className="h-12 flex-1"
+                          >
+                            {isGeneratingMealPlans ? (
+                              <span className="flex items-center justify-center">
+                                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                Generating...
+                              </span>
+                            ) : (
+                              confirmationConfig.confirmButtonLabel
+                            )}
+                          </Button>
+                          <Button
+                            onClick={handleRemoveImage}
+                            variant="outline"
+                            className="h-12 flex-1"
+                          >
+                            Start Over
+                          </Button>
+                        </div>
+                      </>
+                    ) : (
+                      mealPlans.length > 0 && (
+                        <div className="rounded-lg bg-muted/40 p-3 text-xs sm:text-sm text-muted-foreground">
+                          Adjust the list above if you want to regenerate your meal plans.
+                        </div>
+                      )
+                    )}
+                  </div>
+                )}
               </div>
 
               {/* Generated Recipes */}

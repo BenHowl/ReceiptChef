@@ -1,5 +1,5 @@
 import { useState, useCallback, useRef, useEffect } from 'react';
-import { Upload, Camera, X, Loader2, RotateCcw, ImageIcon, Smartphone } from 'lucide-react';
+import { Upload, Camera, X, Loader2, RotateCcw, ImageIcon } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 
@@ -8,13 +8,29 @@ interface ReceiptUploadProps {
   isProcessing?: boolean;
   uploadedImage?: string | null;
   onRemoveImage?: () => void;
+  title?: string;
+  description?: string;
+  cameraButtonLabel?: string;
+  galleryButtonLabel?: string;
+  frameGuideText?: string;
+  processingText?: string;
+  cameraTip?: string;
+  fileNamePrefix?: string;
 }
 
 export default function ReceiptUpload({ 
   onImageUpload, 
   isProcessing = false, 
   uploadedImage,
-  onRemoveImage 
+  onRemoveImage,
+  title = "Upload Your Receipt",
+  description = "Take a photo or upload an image of your grocery receipt",
+  cameraButtonLabel = "Take Photo with Camera",
+  galleryButtonLabel = "Choose from Gallery",
+  frameGuideText = "Center receipt in frame",
+  processingText = "Processing receipt...",
+  cameraTip = "On mobile, tap \"Take Photo with Camera\" to use your phone's camera",
+  fileNamePrefix = "receipt"
 }: ReceiptUploadProps) {
   const [isDragOver, setIsDragOver] = useState(false);
   const [isCameraMode, setIsCameraMode] = useState(false);
@@ -200,7 +216,7 @@ export default function ReceiptUpload({
     // Convert data URL to blob and create file
     const response = await fetch(capturedImage);
     const blob = await response.blob();
-    const file = new File([blob], `receipt-${Date.now()}.jpg`, { type: 'image/jpeg' });
+    const file = new File([blob], `${fileNamePrefix}-${Date.now()}.jpg`, { type: 'image/jpeg' });
     
     // Compress and upload
     const compressedFile = await compressImage(file);
@@ -251,7 +267,7 @@ export default function ReceiptUpload({
           <div className="relative">
             <img 
               src={uploadedImage} 
-              alt="Uploaded receipt" 
+              alt="Uploaded image" 
               className="w-full h-auto rounded-lg shadow-md"
               data-testid="img-uploaded-receipt"
             />
@@ -270,7 +286,7 @@ export default function ReceiptUpload({
               <div className="absolute inset-0 bg-black/50 rounded-lg flex items-center justify-center">
                 <div className="flex items-center space-x-2 text-white">
                   <Loader2 className="h-6 w-6 animate-spin" />
-                  <span className="text-sm">Processing receipt...</span>
+                  <span className="text-sm">{processingText}</span>
                 </div>
               </div>
             )}
@@ -289,7 +305,7 @@ export default function ReceiptUpload({
             <div className="relative">
               <img 
                 src={capturedImage} 
-                alt="Captured receipt" 
+                alt="Captured image" 
                 className="w-full h-auto rounded-lg"
                 data-testid="img-captured-receipt"
               />
@@ -345,7 +361,7 @@ export default function ReceiptUpload({
               <div className="absolute inset-0 pointer-events-none">
                 <div className="absolute inset-4 border-2 border-white/50 rounded-lg"></div>
                 <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-white text-sm bg-black/50 px-2 py-1 rounded">
-                  Center receipt in frame
+                  {frameGuideText}
                 </div>
               </div>
             </div>
@@ -398,9 +414,9 @@ export default function ReceiptUpload({
           </div>
           
           <div className="space-y-2">
-            <h3 className="text-lg md:text-xl font-semibold">Upload Your Receipt</h3>
+            <h3 className="text-lg md:text-xl font-semibold">{title}</h3>
             <p className="text-sm md:text-base text-muted-foreground">
-              Take a photo or upload an image of your grocery receipt
+              {description}
             </p>
           </div>
 
@@ -414,7 +430,7 @@ export default function ReceiptUpload({
               >
                 <span>
                   <Camera className="h-6 w-6 mr-2" />
-                  Take Photo with Camera
+                  {cameraButtonLabel}
                 </span>
               </Button>
               <input
@@ -438,7 +454,7 @@ export default function ReceiptUpload({
               >
                 <span>
                   <ImageIcon className="h-5 w-5 mr-2" />
-                  Choose from Gallery
+                  {galleryButtonLabel}
                 </span>
               </Button>
               <input
@@ -452,7 +468,7 @@ export default function ReceiptUpload({
             </label>
             
             <p className="text-xs text-muted-foreground">
-              <strong>Tip:</strong> On mobile, tap "Take Photo with Camera" to use your phone's camera
+              <strong>Tip:</strong> {cameraTip}
             </p>
           </div>
         </div>

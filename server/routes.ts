@@ -2,7 +2,7 @@ import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { ObjectStorageService, ObjectNotFoundError } from "./objectStorage";
-import { extractIngredientsFromReceipt, generateRecipesFromIngredients } from "./openai";
+import { extractIngredientsFromFridge, extractIngredientsFromReceipt, generateRecipesFromIngredients } from "./openai";
 import { insertReceiptSchema } from "@shared/schema";
 import { z } from "zod";
 
@@ -43,6 +43,50 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error getting upload URL:", error);
       res.status(500).json({ error: "Failed to get upload URL" });
+    }
+  });
+
+  app.post("/api/fridge/scan", async (req, res) => {
+    try {
+      const { base64Image } = req.body ?? {};
+
+      if (typeof base64Image !== "string" || !base64Image.trim()) {
+        return res.status(400).json({ error: "base64Image is required" });
+      }
+
+      if (!process.env.OPENAI_API_KEY) {
+        return res.status(500).json({ error: "OpenAI API key not configured" });
+      }
+
+      const ingredients = await extractIngredientsFromFridge(base64Image);
+
+      res.json({ ingredients });
+    } catch (error) {
+      console.error("Error scanning fridge:", error);
+      res.status(500).json({ error: "Failed to scan fridge" });
+    }
+  });
+
+  app.post("/api/meal-plans/generate", async (req, res) => {
+    try {
+      const schema = z.object({
+        ingredients: z.array(z.string().trim().min(1)).min(1)
+      });
+
+      const parsed = schema.safeParse(req.body ?? {});
+      if (!parsed.success) {
+        return res.status(400).json({ error: "Invalid ingredient list" });
+      }
+
+      if (!process.env.OPENAI_API_KEY) {
+        return res.status(500).json({ error: "OpenAI API key not configured" });
+      }
+
+      const mealPlans = await generateRecipesFromIngredients(parsed.data.ingredients);
+      res.json({ mealPlans });
+    } catch (error) {
+      console.error("Error generating meal plans:", error);
+      res.status(500).json({ error: "Failed to generate meal plans" });
     }
   });
 
@@ -164,6 +208,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Route to serve uploaded objects (simplified for public access)
   app.get("/objects/:objectPath(*)", async (req, res) => {
     try {
+      if (objectStorageError || !objectStorageService) {
+        console.error("Object storage not configured for serving objects", objectStorageError);
+        return res.sendStatus(500);
+      }
       const objectFile = await objectStorageService.getObjectEntityFile(req.path);
       await objectStorageService.downloadObject(objectFile, res);
     } catch (error) {
