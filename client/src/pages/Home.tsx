@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import React, { useState } from 'react';
 import { Upload, Sparkles, Calendar, Refrigerator, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -8,6 +8,8 @@ import RecipeCard from '@/components/RecipeCard';
 import MealPlanCard from '@/components/MealPlanCard';
 import RecipeModal from '@/components/RecipeModal';
 import ThemeToggle from '@/components/ThemeToggle';
+import AffiliateSettings from '@/components/AffiliateSettings';
+import AffiliateRecommendations from '@/components/AffiliateRecommendations';
 import { useToast } from '@/hooks/use-toast';
 import type { Recipe, MealPlan } from '@shared/schema';
 import heroImage from '@assets/generated_images/hero_image_cutting_board.png';
@@ -298,7 +300,10 @@ export default function Home() {
                 <p className="text-xs text-muted-foreground hidden sm:block">Transform receipts into meal plans</p>
               </div>
             </div>
-            <ThemeToggle />
+            <div className="flex items-center gap-2">
+              <AffiliateSettings />
+              <ThemeToggle />
+            </div>
           </div>
         </div>
       </header>
@@ -378,6 +383,16 @@ export default function Home() {
                 />
                 {ingredients.length > 0 && (
                   <div className="mt-4 space-y-3">
+                    {/* Show affiliate recommendation for ingredients context */}
+                    {ingredients.length > 5 && !needsConfirmation && mealPlans.length === 0 && (
+                      <AffiliateRecommendations
+                        context="ingredients"
+                        ingredients={ingredients}
+                        maxItems={1}
+                        title="Complete your pantry"
+                        className="mb-4"
+                      />
+                    )}
                     {needsConfirmation ? (
                       <>
                         <div className="rounded-lg border border-dashed bg-muted/40 p-3 text-xs sm:text-sm text-muted-foreground">
@@ -438,12 +453,25 @@ export default function Home() {
                       </Button>
                     </div>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                      {recipes.map((recipe) => (
-                        <RecipeCard 
-                          key={recipe.id}
-                          recipe={recipe}
-                          onViewDetails={handleViewRecipe}
-                        />
+                      {recipes.map((recipe, index) => (
+                        <React.Fragment key={recipe.id}>
+                          <RecipeCard
+                            recipe={recipe}
+                            onViewDetails={handleViewRecipe}
+                          />
+                          {/* Show affiliate recommendation after first 2 recipes */}
+                          {index === 1 && recipes.length > 2 && (
+                            <div className="col-span-1 md:col-span-2">
+                              <AffiliateRecommendations
+                                context="recipe"
+                                recipeType={recipes[0]?.mealType}
+                                maxItems={2}
+                                title="Essential kitchen tools"
+                                subtitle="Upgrade your cooking experience"
+                              />
+                            </div>
+                          )}
+                        </React.Fragment>
                       ))}
                     </div>
                   </div>
@@ -457,16 +485,29 @@ export default function Home() {
                       Weekly Meal Plans
                     </h2>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                      {mealPlans.map((mealPlan) => (
-                        <MealPlanCard 
-                          key={mealPlan.id}
-                          mealPlan={mealPlan}
-                          onRecipeClick={(recipeId) => {
-                            const recipe = [...recipes, ...mealPlans.flatMap(mp => mp.recipes)]
-                              .find(r => r.id === recipeId);
-                            if (recipe) handleViewRecipe(recipe);
-                          }}
-                        />
+                      {mealPlans.map((mealPlan, index) => (
+                        <React.Fragment key={mealPlan.id}>
+                          <MealPlanCard
+                            mealPlan={mealPlan}
+                            onRecipeClick={(recipeId) => {
+                              const recipe = [...recipes, ...mealPlans.flatMap(mp => mp.recipes)]
+                                .find(r => r.id === recipeId);
+                              if (recipe) handleViewRecipe(recipe);
+                            }}
+                          />
+                          {/* Show affiliate recommendation after first meal plan */}
+                          {index === 0 && mealPlans.length > 1 && (
+                            <div className="col-span-1 md:col-span-2">
+                              <AffiliateRecommendations
+                                context="meal-plan"
+                                ingredients={ingredients}
+                                maxItems={1}
+                                title="Meal prep must-haves"
+                                subtitle="Save time with these kitchen essentials"
+                              />
+                            </div>
+                          )}
+                        </React.Fragment>
                       ))}
                     </div>
                   </div>

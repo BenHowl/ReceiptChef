@@ -5,6 +5,7 @@ import { ObjectStorageService, ObjectNotFoundError } from "./objectStorage";
 import { extractIngredientsFromFridge, extractIngredientsFromReceipt, generateRecipesFromIngredients } from "./openai";
 import { insertReceiptSchema } from "@shared/schema";
 import { z } from "zod";
+import { affiliateService } from "./services/affiliateService";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Validate object storage environment variables at startup
@@ -220,6 +221,45 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.sendStatus(404);
       }
       return res.sendStatus(500);
+    }
+  });
+
+  // Route to get affiliate product recommendations
+  app.get("/api/affiliate/products", async (req, res) => {
+    try {
+      const { context, recipeType, ingredients, maxItems } = req.query;
+
+      const products = await affiliateService.getProducts(
+        (context as any) || 'general',
+        {
+          recipeType: recipeType as string,
+          ingredients: ingredients ? (ingredients as string).split(',') : undefined,
+          maxItems: maxItems ? parseInt(maxItems as string) : undefined
+        }
+      );
+
+      res.json(products);
+    } catch (error) {
+      console.error("Error getting affiliate products:", error);
+      res.status(500).json({ error: "Failed to get product recommendations" });
+    }
+  });
+
+  // Route to track affiliate clicks
+  app.post("/api/affiliate/track", async (req, res) => {
+    try {
+      const { productId, context } = req.body;
+
+      if (!productId) {
+        return res.status(400).json({ error: "Product ID required" });
+      }
+
+      await affiliateService.trackClick(productId, context || 'unknown');
+
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Error tracking affiliate click:", error);
+      res.status(500).json({ error: "Failed to track click" });
     }
   });
 
