@@ -380,47 +380,70 @@ export default function Home() {
         </section>
 
         {/* Upload Section */}
-        <section className="mb-8 md:mb-12">
-          <div className="flex justify-center gap-2 mb-4">
-            <Button
-              variant={uploadMode === 'receipt' ? 'default' : 'outline'}
-              className="flex-1 sm:flex-none sm:min-w-[160px]"
-              onClick={() => setUploadMode('receipt')}
-              disabled={isProcessing}
-            >
-              <Upload className="h-4 w-4 mr-2" />
-              Receipt
-            </Button>
-            <Button
-              variant={uploadMode === 'fridge' ? 'default' : 'outline'}
-              className="flex-1 sm:flex-none sm:min-w-[160px]"
-              onClick={() => setUploadMode('fridge')}
-              disabled={isProcessing}
-            >
-              <Refrigerator className="h-4 w-4 mr-2" />
-              Fridge
-            </Button>
-          </div>
-          <ReceiptUpload 
-            key={uploadMode}
-            onImageUpload={uploadMode === 'receipt' ? handleReceiptUpload : handleFridgeUpload}
-            isProcessing={isProcessing}
-            uploadedImage={uploadedImage}
-            onRemoveImage={handleRemoveImage}
-            title={activeConfig.uploadTitle}
-            description={activeConfig.uploadDescription}
-            cameraButtonLabel={activeConfig.cameraButtonLabel}
-            galleryButtonLabel={activeConfig.galleryButtonLabel}
-            frameGuideText={activeConfig.frameGuideText}
-            processingText={processingText}
-            cameraTip={activeConfig.cameraTip}
-            fileNamePrefix={activeConfig.fileNamePrefix}
-          />
-        </section>
+        {(ingredients.length === 0 || isProcessing) && (
+          <section className="mb-8 md:mb-12">
+            <div className="flex justify-center gap-2 mb-4">
+              <Button
+                variant={uploadMode === 'receipt' ? 'default' : 'outline'}
+                className="flex-1 sm:flex-none sm:min-w-[160px]"
+                onClick={() => setUploadMode('receipt')}
+                disabled={isProcessing}
+              >
+                <Upload className="h-4 w-4 mr-2" />
+                Receipt
+              </Button>
+              <Button
+                variant={uploadMode === 'fridge' ? 'default' : 'outline'}
+                className="flex-1 sm:flex-none sm:min-w-[160px]"
+                onClick={() => setUploadMode('fridge')}
+                disabled={isProcessing}
+              >
+                <Refrigerator className="h-4 w-4 mr-2" />
+                Fridge
+              </Button>
+            </div>
+            <ReceiptUpload
+              key={uploadMode}
+              onImageUpload={uploadMode === 'receipt' ? handleReceiptUpload : handleFridgeUpload}
+              isProcessing={isProcessing}
+              uploadedImage={uploadedImage}
+              onRemoveImage={handleRemoveImage}
+              title={activeConfig.uploadTitle}
+              description={activeConfig.uploadDescription}
+              cameraButtonLabel={activeConfig.cameraButtonLabel}
+              galleryButtonLabel={activeConfig.galleryButtonLabel}
+              frameGuideText={activeConfig.frameGuideText}
+              processingText={processingText}
+              cameraTip={activeConfig.cameraTip}
+              fileNamePrefix={activeConfig.fileNamePrefix}
+            />
+          </section>
+        )}
 
         {/* Results Section - Mobile First */}
         {(ingredients.length > 0 || isProcessing) && (
           <section className="space-y-6 md:space-y-8">
+            {/* Compact source indicator when receipt is hidden */}
+            {ingredients.length > 0 && !needsConfirmation && (
+              <div className="flex items-center justify-between bg-muted/30 rounded-lg px-4 py-3 mb-6">
+                <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                  {uploadMode === 'receipt' ? (
+                    <Upload className="h-4 w-4" />
+                  ) : (
+                    <Refrigerator className="h-4 w-4" />
+                  )}
+                  <span>Ingredients from {uploadMode === 'receipt' ? 'receipt' : 'fridge scan'}</span>
+                </div>
+                <Button
+                  onClick={handleRemoveImage}
+                  variant="ghost"
+                  size="sm"
+                  className="text-muted-foreground hover:text-foreground"
+                >
+                  Start Over
+                </Button>
+              </div>
+            )}
             {/* Mobile: Stack all components, Desktop: 1/3 - 2/3 layout */}
             {/* Compact Ingredients Display for Mobile, Sidebar for Desktop */}
             <div className={`${recipes.length > 0 ? 'md:grid md:grid-cols-1 lg:grid-cols-4 md:gap-6' : ''}`}>
