@@ -465,9 +465,10 @@ export default function Home() {
                               <AffiliateRecommendations
                                 context="recipe"
                                 recipeType={recipes[0]?.mealType}
+                                recipes={recipes}
                                 maxItems={2}
-                                title="Essential kitchen tools"
-                                subtitle="Upgrade your cooking experience"
+                                title="Perfect for these recipes"
+                                subtitle="Tools recommended based on your meal plan"
                               />
                             </div>
                           )}

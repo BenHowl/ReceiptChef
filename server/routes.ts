@@ -224,16 +224,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Route to get affiliate product recommendations
-  app.get("/api/affiliate/products", async (req, res) => {
+  // Route to get affiliate product recommendations (GET and POST)
+  const handleAffiliateProducts = async (req: any, res: any) => {
     try {
       const { context, recipeType, ingredients, maxItems } = req.query;
+      const { recipes } = req.body || {};
 
       const products = await affiliateService.getProducts(
         (context as any) || 'general',
         {
           recipeType: recipeType as string,
           ingredients: ingredients ? (ingredients as string).split(',') : undefined,
+          recipes: recipes || undefined,
           maxItems: maxItems ? parseInt(maxItems as string) : undefined
         }
       );
@@ -243,7 +245,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.error("Error getting affiliate products:", error);
       res.status(500).json({ error: "Failed to get product recommendations" });
     }
-  });
+  };
+
+  app.get("/api/affiliate/products", handleAffiliateProducts);
+  app.post("/api/affiliate/products", handleAffiliateProducts);
 
   // Route to track affiliate clicks
   app.post("/api/affiliate/track", async (req, res) => {

@@ -7,6 +7,7 @@ interface AffiliateRecommendationsProps {
   context?: 'recipe' | 'ingredients' | 'meal-plan' | 'general';
   recipeType?: string;
   ingredients?: string[];
+  recipes?: any[];
   maxItems?: number;
   title?: string;
   subtitle?: string;
@@ -17,6 +18,7 @@ export default function AffiliateRecommendations({
   context = 'general',
   recipeType,
   ingredients = [],
+  recipes = [],
   maxItems = 2,
   title,
   subtitle,
@@ -40,7 +42,20 @@ export default function AffiliateRecommendations({
           maxItems: maxItems.toString(),
         });
 
-        const response = await fetch(`/api/affiliate/products?${params}`);
+        // Include recipes in the request body for dynamic analysis
+        const requestBody = {
+          ...(recipes.length > 0 && { recipes })
+        };
+
+        const hasBody = Object.keys(requestBody).length > 0;
+
+        const response = await fetch(`/api/affiliate/products?${params}`, {
+          method: hasBody ? 'POST' : 'GET',
+          ...(hasBody && {
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(requestBody)
+          })
+        });
         if (response.ok) {
           const apiProducts = await response.json();
           setProducts(apiProducts);
@@ -143,7 +158,7 @@ export default function AffiliateRecommendations({
     };
 
     fetchProducts();
-  }, [context, recipeType, ingredients, maxItems]);
+  }, [context, recipeType, ingredients, recipes, maxItems]);
 
   if (!isVisible || products.length === 0) {
     return null;

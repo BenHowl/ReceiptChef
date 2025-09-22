@@ -226,6 +226,154 @@ export class AffiliateService {
   }
 
   /**
+   * Get dynamic product recommendations based on recipe analysis
+   */
+  private analyzeRecipeNeeds(recipes: any[]): string[] {
+    const needs: string[] = [];
+
+    for (const recipe of recipes) {
+      // Analyze cooking methods
+      const instructions = recipe.instructions?.join(' ').toLowerCase() || '';
+      const title = recipe.title?.toLowerCase() || '';
+      const description = recipe.description?.toLowerCase() || '';
+      const allText = `${title} ${description} ${instructions}`;
+
+      // Detect cooking methods and suggest tools
+      if (allText.includes('bake') || allText.includes('oven')) needs.push('baking-tools');
+      if (allText.includes('grill') || allText.includes('grilled')) needs.push('grilling-tools');
+      if (allText.includes('fry') || allText.includes('sauté')) needs.push('frying-tools');
+      if (allText.includes('blend') || allText.includes('smoothie')) needs.push('blender');
+      if (allText.includes('mix') || allText.includes('whisk')) needs.push('mixing-tools');
+      if (allText.includes('cut') || allText.includes('chop') || allText.includes('slice')) needs.push('knives');
+      if (allText.includes('pressure cook') || allText.includes('instant pot')) needs.push('pressure-cooker');
+      if (allText.includes('air fry') || allText.includes('crispy')) needs.push('air-fryer');
+      if (allText.includes('slow cook') || allText.includes('simmer')) needs.push('slow-cooker');
+
+      // Detect ingredient-specific needs
+      if (allText.includes('spice') || allText.includes('season')) needs.push('spices');
+      if (allText.includes('oil') || allText.includes('olive')) needs.push('cooking-oil');
+      if (allText.includes('pasta') || allText.includes('noodle')) needs.push('pasta-tools');
+
+      // Detect by meal complexity
+      if (recipe.difficulty === 'hard' || recipe.cookingTime > 60) needs.push('advanced-tools');
+      if (recipe.servings > 6) needs.push('large-cookware');
+    }
+
+    return Array.from(new Set(needs)); // Remove duplicates
+  }
+
+  /**
+   * Get products based on analyzed recipe needs
+   */
+  private getProductsByNeeds(needs: string[]): AffiliateProduct[] {
+    const productMap: Record<string, AffiliateProduct[]> = {
+      'knives': [
+        {
+          id: 'amz-knife-set',
+          title: 'Cuisinart 15-Piece Knife Set',
+          description: 'Professional-grade stainless steel knives with block',
+          price: '$79.99',
+          originalPrice: '$159.99',
+          discount: '50% OFF',
+          imageUrl: 'https://m.media-amazon.com/images/I/81cV-pZPTCL._AC_SL160_.jpg',
+          affiliateLink: this.buildAmazonLink('B00GIBKC3K'),
+          category: 'kitchen-tool',
+          relevance: 'high'
+        }
+      ],
+      'pressure-cooker': [
+        {
+          id: 'amz-instant-pot',
+          title: 'Instant Pot Duo 7-in-1',
+          description: 'Perfect for the pressure cooking mentioned in your recipes',
+          price: '$89.95',
+          originalPrice: '$119.99',
+          discount: '25% OFF',
+          imageUrl: 'https://m.media-amazon.com/images/I/71V1LrY1MSL._AC_SL160_.jpg',
+          affiliateLink: this.buildAmazonLink('B06Y1YD5W7'),
+          category: 'appliance',
+          relevance: 'high'
+        }
+      ],
+      'air-fryer': [
+        {
+          id: 'amz-air-fryer',
+          title: 'COSORI Air Fryer',
+          description: 'Perfect for crispy recipes without excess oil',
+          price: '$99.99',
+          originalPrice: '$129.99',
+          discount: '23% OFF',
+          imageUrl: 'https://m.media-amazon.com/images/I/71qBMnFrdTL._AC_SL160_.jpg',
+          affiliateLink: this.buildAmazonLink('B07FDJMC9Q'),
+          category: 'appliance',
+          relevance: 'high'
+        }
+      ],
+      'mixing-tools': [
+        {
+          id: 'amz-mixing-bowls',
+          title: 'Stainless Steel Mixing Bowl Set',
+          description: 'Essential for the mixing and whisking in your recipes',
+          price: '$29.99',
+          originalPrice: '$49.99',
+          discount: '40% OFF',
+          imageUrl: 'https://m.media-amazon.com/images/I/71Uu52vLXSL._AC_SL160_.jpg',
+          affiliateLink: this.buildAmazonLink('B01HTYH8YA'),
+          category: 'kitchen-tool',
+          relevance: 'high'
+        }
+      ],
+      'baking-tools': [
+        {
+          id: 'amz-baking-set',
+          title: 'Complete Baking Set',
+          description: 'Everything needed for the baking recipes you\'re making',
+          price: '$45.99',
+          originalPrice: '$65.99',
+          discount: '30% OFF',
+          imageUrl: 'https://m.media-amazon.com/images/I/81dBwXNGgUL._AC_SL160_.jpg',
+          affiliateLink: this.buildAmazonLink('B08XYZ123'),
+          category: 'kitchen-tool',
+          relevance: 'high'
+        }
+      ],
+      'spices': [
+        {
+          id: 'amz-spice-set',
+          title: 'McCormick Gourmet Spice Set',
+          description: 'Complete your spice collection for these recipes',
+          price: '$39.99',
+          imageUrl: 'https://m.media-amazon.com/images/I/91gO5PwGYJL._AC_SL160_.jpg',
+          affiliateLink: this.buildAmazonLink('B07BNQSFB7'),
+          category: 'ingredient',
+          relevance: 'medium'
+        }
+      ],
+      'cooking-oil': [
+        {
+          id: 'amz-olive-oil',
+          title: 'Premium Extra Virgin Olive Oil',
+          description: 'High-quality oil for your cooking',
+          price: '$24.99',
+          imageUrl: 'https://m.media-amazon.com/images/I/71tFmSvCOtL._AC_SL160_.jpg',
+          affiliateLink: this.buildAmazonLink('B07T8R5XYZ'),
+          category: 'ingredient',
+          relevance: 'medium'
+        }
+      ]
+    };
+
+    const recommendedProducts: AffiliateProduct[] = [];
+    for (const need of needs) {
+      if (productMap[need]) {
+        recommendedProducts.push(...productMap[need]);
+      }
+    }
+
+    return recommendedProducts;
+  }
+
+  /**
    * Main method to get affiliate products based on context
    */
   async getProducts(
@@ -233,6 +381,7 @@ export class AffiliateService {
     options?: {
       recipeType?: string;
       ingredients?: string[];
+      recipes?: any[];
       maxItems?: number;
     }
   ): Promise<AffiliateProduct[]> {
@@ -240,9 +389,25 @@ export class AffiliateService {
 
     switch (context) {
       case 'recipe':
-        const tools = await this.getKitchenTools();
-        const cookbooks = await this.getCookbooks(options?.recipeType);
-        products = [...tools, ...cookbooks];
+        if (options?.recipes && options.recipes.length > 0) {
+          // Dynamic analysis based on actual recipes
+          const analyzedNeeds = this.analyzeRecipeNeeds(options.recipes);
+          const dynamicProducts = this.getProductsByNeeds(analyzedNeeds);
+
+          if (dynamicProducts.length > 0) {
+            products = dynamicProducts;
+          } else {
+            // Fallback to general tools and cookbooks
+            const tools = await this.getKitchenTools();
+            const cookbooks = await this.getCookbooks(options?.recipeType);
+            products = [...tools, ...cookbooks];
+          }
+        } else {
+          // No recipes provided, use general recommendations
+          const tools = await this.getKitchenTools();
+          const cookbooks = await this.getCookbooks(options?.recipeType);
+          products = [...tools, ...cookbooks];
+        }
         break;
 
       case 'ingredients':
