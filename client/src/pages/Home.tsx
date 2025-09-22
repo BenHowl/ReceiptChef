@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
-import { Upload, Sparkles, Calendar, Refrigerator, Loader2 } from 'lucide-react';
+import { Upload, Sparkles, Calendar, Refrigerator, Loader2, X, Plus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import { Card, CardContent } from '@/components/ui/card';
 import ReceiptUpload from '@/components/ReceiptUpload';
 import IngredientsList from '@/components/IngredientsList';
@@ -82,6 +83,7 @@ export default function Home() {
   const [needsConfirmation, setNeedsConfirmation] = useState(false);
   const [isGeneratingMealPlans, setIsGeneratingMealPlans] = useState(false);
   const [lastDetectionMode, setLastDetectionMode] = useState<UploadMode | null>(null);
+  const [newIngredient, setNewIngredient] = useState('');
   const { toast } = useToast();
   const activeConfig = uploadModeConfig[uploadMode];
   const processingText = processingSource
@@ -450,34 +452,64 @@ export default function Home() {
               {/* Ingredients Section */}
               <div className={`${recipes.length > 0 ? 'lg:col-span-1' : ''} mb-6 md:mb-0`}>
                 {recipes.length > 0 ? (
-                  /* Compact view when recipes exist */
-                  <div className="space-y-3">
-                    <h3 className="font-semibold text-sm text-muted-foreground">Your Ingredients ({ingredients.length})</h3>
-                    <div className="flex flex-wrap gap-2">
+                  /* Clean list view when recipes exist */
+                  <div className="space-y-4">
+                    <div className="flex items-center justify-between">
+                      <h3 className="font-semibold text-lg">Ingredients</h3>
+                      <span className="text-sm text-muted-foreground">{ingredients.length} items</span>
+                    </div>
+
+                    {/* Ingredients list */}
+                    <div className="space-y-2 max-h-64 overflow-y-auto">
                       {ingredients.map((ingredient, index) => (
-                        <div key={index} className="flex items-center gap-1 bg-muted px-2 py-1 rounded-md text-xs">
-                          <span>{ingredient}</span>
+                        <div
+                          key={index}
+                          className="flex items-center justify-between p-3 bg-card rounded-lg border hover:bg-muted/50 transition-colors"
+                        >
+                          <span className="text-sm font-medium flex-1">{ingredient}</span>
                           <button
                             onClick={() => {
                               const updated = ingredients.filter(item => item !== ingredient);
                               handleIngredientsChange(updated);
                             }}
-                            className="text-muted-foreground hover:text-destructive ml-1"
+                            className="p-1 hover:bg-destructive/10 hover:text-destructive rounded transition-colors"
+                            aria-label={`Remove ${ingredient}`}
                           >
-                            ×
+                            <X className="h-4 w-4" />
                           </button>
                         </div>
                       ))}
                     </div>
-                    <IngredientsList
-                      ingredients={[]}
-                      onIngredientsChange={(newIngredients) => {
-                        if (newIngredients.length > 0) {
-                          handleIngredientsChange([...ingredients, ...newIngredients]);
-                        }
-                      }}
-                      title="Add More"
-                    />
+
+                    {/* Add ingredient input */}
+                    <div className="pt-3 border-t">
+                      <div className="flex gap-2">
+                        <Input
+                          placeholder="Add ingredient..."
+                          value={newIngredient}
+                          onChange={(e) => setNewIngredient(e.target.value)}
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter' && newIngredient.trim()) {
+                              handleIngredientsChange([...ingredients, newIngredient.trim()]);
+                              setNewIngredient('');
+                            }
+                          }}
+                          className="flex-1"
+                        />
+                        <Button
+                          onClick={() => {
+                            if (newIngredient.trim()) {
+                              handleIngredientsChange([...ingredients, newIngredient.trim()]);
+                              setNewIngredient('');
+                            }
+                          }}
+                          disabled={!newIngredient.trim()}
+                          size="icon"
+                        >
+                          <Plus className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </div>
                   </div>
                 ) : (
                   /* Full view when no recipes */
