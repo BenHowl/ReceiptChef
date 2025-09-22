@@ -1,6 +1,7 @@
-import { ExternalLink } from 'lucide-react';
+import { ExternalLink, Package } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { useState } from 'react';
 
 export interface AffiliateProduct {
   id: string;
@@ -26,6 +27,8 @@ export default function AffiliateCard({ product, variant = 'compact', className 
     window.open(product.affiliateLink, '_blank', 'noopener,noreferrer');
   };
 
+  const [imageError, setImageError] = useState(false);
+
   if (variant === 'compact') {
     return (
       <Card
@@ -35,12 +38,18 @@ export default function AffiliateCard({ product, variant = 'compact', className 
       >
         <CardContent className="p-3 md:p-4">
           <div className="flex items-start gap-3">
-            {product.imageUrl && (
+            {product.imageUrl && !imageError ? (
               <img
                 src={product.imageUrl}
                 alt={product.title}
                 className="w-16 h-16 md:w-20 md:h-20 rounded-md object-cover shrink-0"
+                onError={() => setImageError(true)}
+                loading="lazy"
               />
+            ) : (
+              <div className="w-16 h-16 md:w-20 md:h-20 rounded-md bg-muted flex items-center justify-center shrink-0">
+                <Package className="h-6 w-6 md:h-8 md:w-8 text-muted-foreground" />
+              </div>
             )}
             <div className="flex-1 min-w-0">
               <div className="flex items-start justify-between gap-2 mb-1">
@@ -88,15 +97,21 @@ export default function AffiliateCard({ product, variant = 'compact', className 
       data-testid={`affiliate-card-full-${product.id}`}
     >
       <CardContent className="p-4 md:p-6">
-        {product.imageUrl && (
+        {product.imageUrl && !imageError ? (
           <div className="aspect-video rounded-md overflow-hidden mb-4">
             <img
               src={product.imageUrl}
               alt={product.title}
               className="w-full h-full object-cover transition-transform hover:scale-105"
+              onError={() => setImageError(true)}
+              loading="lazy"
             />
           </div>
-        )}
+        ) : product.imageUrl ? (
+          <div className="aspect-video rounded-md bg-muted flex items-center justify-center mb-4">
+            <Package className="h-12 w-12 text-muted-foreground" />
+          </div>
+        ) : null}
         <div className="space-y-3">
           <div className="flex items-start justify-between gap-2">
             <h3 className="font-semibold text-base md:text-lg flex-1">

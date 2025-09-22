@@ -59,7 +59,7 @@ export default function AffiliateRecommendations({
         price: '$79.99',
         originalPrice: '$159.99',
         discount: '50% OFF',
-        imageUrl: 'https://m.media-amazon.com/images/I/81cV-pZPTCL._AC_SY200_.jpg',
+        imageUrl: 'https://m.media-amazon.com/images/I/81cV-pZPTCL._AC_SL160_.jpg',
         affiliateLink: 'https://www.amazon.com/dp/B00GIBKC3K?tag=receiptchef-20',
         category: 'kitchen-tool',
         relevance: 'high'
@@ -71,7 +71,7 @@ export default function AffiliateRecommendations({
         price: '$19.99',
         originalPrice: '$35.00',
         discount: '43% OFF',
-        imageUrl: 'https://m.media-amazon.com/images/I/91wY-IcZPgL._AC_SY200_.jpg',
+        imageUrl: 'https://m.media-amazon.com/images/I/91wY-IcZPgL._AC_SL160_.jpg',
         affiliateLink: 'https://www.amazon.com/dp/B01HMXV0UQ?tag=receiptchef-20',
         category: 'cookbook',
         relevance: 'medium'
@@ -83,7 +83,7 @@ export default function AffiliateRecommendations({
         price: '$89.95',
         originalPrice: '$119.99',
         discount: '25% OFF',
-        imageUrl: 'https://m.media-amazon.com/images/I/71V1LrY1MSL._AC_SY200_.jpg',
+        imageUrl: 'https://m.media-amazon.com/images/I/71V1LrY1MSL._AC_SL160_.jpg',
         affiliateLink: 'https://www.amazon.com/dp/B06Y1YD5W7?tag=receiptchef-20',
         category: 'appliance',
         relevance: 'high'
@@ -93,7 +93,7 @@ export default function AffiliateRecommendations({
         title: 'McCormick Gourmet Spice Set',
         description: '12 essential spices for cooking',
         price: '$39.99',
-        imageUrl: 'https://m.media-amazon.com/images/I/91gO5PwGYJL._AC_SY200_.jpg',
+        imageUrl: 'https://m.media-amazon.com/images/I/91gO5PwGYJL._AC_SL160_.jpg',
         affiliateLink: 'https://www.amazon.com/dp/B07BNQSFB7?tag=receiptchef-20',
         category: 'ingredient',
         relevance: 'medium'
@@ -105,7 +105,7 @@ export default function AffiliateRecommendations({
         price: '$29.99',
         originalPrice: '$49.99',
         discount: '40% OFF',
-        imageUrl: 'https://m.media-amazon.com/images/I/71Uu52vLXSL._AC_SY200_.jpg',
+        imageUrl: 'https://m.media-amazon.com/images/I/71Uu52vLXSL._AC_SL160_.jpg',
         affiliateLink: 'https://www.amazon.com/dp/B01HTYH8YA?tag=receiptchef-20',
         category: 'kitchen-tool',
         relevance: 'low'
