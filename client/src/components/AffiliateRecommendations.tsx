@@ -65,67 +65,164 @@ export default function AffiliateRecommendations({
         console.error('Error fetching affiliate products:', error);
       }
 
-      // Fallback to mock products with real Amazon affiliate links
-      const mockProducts: AffiliateProduct[] = [
-      {
-        id: 'amz-knife-set',
-        title: 'Cuisinart 15-Piece Knife Set',
-        description: 'Professional-grade stainless steel knives with block',
-        price: '$79.99',
-        originalPrice: '$159.99',
-        discount: '50% OFF',
-        imageUrl: 'https://m.media-amazon.com/images/I/81cV-pZPTCL._AC_SL160_.jpg',
-        affiliateLink: 'https://www.amazon.com/dp/B00GIBKC3K?tag=receiptchef-20',
-        category: 'kitchen-tool',
-        relevance: 'high'
-      },
-      {
-        id: 'amz-cookbook',
-        title: 'Salt, Fat, Acid, Heat',
-        description: 'Master the elements of good cooking',
-        price: '$19.99',
-        originalPrice: '$35.00',
-        discount: '43% OFF',
-        imageUrl: 'https://m.media-amazon.com/images/I/91wY-IcZPgL._AC_SL160_.jpg',
-        affiliateLink: 'https://www.amazon.com/dp/B01HMXV0UQ?tag=receiptchef-20',
-        category: 'cookbook',
-        relevance: 'medium'
-      },
-      {
-        id: 'amz-instant-pot',
-        title: 'Instant Pot Duo 7-in-1',
-        description: 'Electric pressure cooker, slow cooker, rice cooker & more',
-        price: '$89.95',
-        originalPrice: '$119.99',
-        discount: '25% OFF',
-        imageUrl: 'https://m.media-amazon.com/images/I/71V1LrY1MSL._AC_SL160_.jpg',
-        affiliateLink: 'https://www.amazon.com/dp/B06Y1YD5W7?tag=receiptchef-20',
-        category: 'appliance',
-        relevance: 'high'
-      },
-      {
-        id: 'amz-spice-set',
-        title: 'McCormick Gourmet Spice Set',
-        description: '12 essential spices for cooking',
-        price: '$39.99',
-        imageUrl: 'https://m.media-amazon.com/images/I/91gO5PwGYJL._AC_SL160_.jpg',
-        affiliateLink: 'https://www.amazon.com/dp/B07BNQSFB7?tag=receiptchef-20',
-        category: 'ingredient',
-        relevance: 'medium'
-      },
-      {
-        id: 'amz-mixing-bowls',
-        title: 'Stainless Steel Mixing Bowl Set',
-        description: 'Set of 6 nesting bowls with lids',
-        price: '$29.99',
-        originalPrice: '$49.99',
-        discount: '40% OFF',
-        imageUrl: 'https://m.media-amazon.com/images/I/71Uu52vLXSL._AC_SL160_.jpg',
-        affiliateLink: 'https://www.amazon.com/dp/B01HTYH8YA?tag=receiptchef-20',
-        category: 'kitchen-tool',
-        relevance: 'low'
-      }
-    ];
+      // Analyze recipes for dynamic recommendations (client-side fallback)
+      const getDynamicProducts = () => {
+        if (context === 'recipe' && recipes.length > 0) {
+          const needs: string[] = [];
+
+          for (const recipe of recipes) {
+            const instructions = recipe.instructions?.join(' ').toLowerCase() || '';
+            const title = recipe.title?.toLowerCase() || '';
+            const description = recipe.description?.toLowerCase() || '';
+            const allText = `${title} ${description} ${instructions}`;
+
+            // Detect cooking methods
+            if (allText.includes('bake') || allText.includes('oven')) needs.push('baking');
+            if (allText.includes('pressure cook') || allText.includes('instant pot')) needs.push('pressure-cook');
+            if (allText.includes('air fry') || allText.includes('crispy')) needs.push('air-fry');
+            if (allText.includes('mix') || allText.includes('whisk')) needs.push('mixing');
+            if (allText.includes('cut') || allText.includes('chop') || allText.includes('slice')) needs.push('knives');
+            if (allText.includes('spice') || allText.includes('season')) needs.push('spices');
+          }
+
+          // Create dynamic product recommendations
+          const dynamicProducts: AffiliateProduct[] = [];
+
+          if (needs.includes('pressure-cook')) {
+            dynamicProducts.push({
+              id: 'amz-instant-pot',
+              title: 'Instant Pot Duo 7-in-1',
+              description: 'Perfect for the pressure cooking mentioned in your recipes',
+              price: '$89.95',
+              originalPrice: '$119.99',
+              discount: '25% OFF',
+              imageUrl: 'https://m.media-amazon.com/images/I/71V1LrY1MSL._AC_SL160_.jpg',
+              affiliateLink: 'https://www.amazon.com/dp/B06Y1YD5W7?tag=receiptchef-20',
+              category: 'appliance' as const,
+              relevance: 'high' as const
+            });
+          }
+
+          if (needs.includes('air-fry')) {
+            dynamicProducts.push({
+              id: 'amz-air-fryer',
+              title: 'COSORI Air Fryer',
+              description: 'Perfect for making the crispy dishes in your meal plan',
+              price: '$99.99',
+              originalPrice: '$129.99',
+              discount: '23% OFF',
+              imageUrl: 'https://m.media-amazon.com/images/I/71qBMnFrdTL._AC_SL160_.jpg',
+              affiliateLink: 'https://www.amazon.com/dp/B07FDJMC9Q?tag=receiptchef-20',
+              category: 'appliance' as const,
+              relevance: 'high' as const
+            });
+          }
+
+          if (needs.includes('knives')) {
+            dynamicProducts.push({
+              id: 'amz-knife-set',
+              title: 'Cuisinart 15-Piece Knife Set',
+              description: 'Essential for all the chopping and slicing in your recipes',
+              price: '$79.99',
+              originalPrice: '$159.99',
+              discount: '50% OFF',
+              imageUrl: 'https://m.media-amazon.com/images/I/81cV-pZPTCL._AC_SL160_.jpg',
+              affiliateLink: 'https://www.amazon.com/dp/B00GIBKC3K?tag=receiptchef-20',
+              category: 'kitchen-tool' as const,
+              relevance: 'high' as const
+            });
+          }
+
+          if (needs.includes('mixing')) {
+            dynamicProducts.push({
+              id: 'amz-mixing-bowls',
+              title: 'Stainless Steel Mixing Bowl Set',
+              description: 'Essential for the mixing and whisking in your recipes',
+              price: '$29.99',
+              originalPrice: '$49.99',
+              discount: '40% OFF',
+              imageUrl: 'https://m.media-amazon.com/images/I/71Uu52vLXSL._AC_SL160_.jpg',
+              affiliateLink: 'https://www.amazon.com/dp/B01HTYH8YA?tag=receiptchef-20',
+              category: 'kitchen-tool' as const,
+              relevance: 'high' as const
+            });
+          }
+
+          if (needs.includes('baking')) {
+            dynamicProducts.push({
+              id: 'amz-baking-set',
+              title: 'Complete Baking Set',
+              description: 'Everything needed for the baking recipes you\'re making',
+              price: '$45.99',
+              originalPrice: '$65.99',
+              discount: '30% OFF',
+              imageUrl: 'https://m.media-amazon.com/images/I/81dBwXNGgUL._AC_SL160_.jpg',
+              affiliateLink: 'https://www.amazon.com/dp/B08XYZ123?tag=receiptchef-20',
+              category: 'kitchen-tool' as const,
+              relevance: 'high' as const
+            });
+          }
+
+          if (needs.includes('spices')) {
+            dynamicProducts.push({
+              id: 'amz-spice-set',
+              title: 'McCormick Gourmet Spice Set',
+              description: 'Complete your spice collection for these recipes',
+              price: '$39.99',
+              imageUrl: 'https://m.media-amazon.com/images/I/91gO5PwGYJL._AC_SL160_.jpg',
+              affiliateLink: 'https://www.amazon.com/dp/B07BNQSFB7?tag=receiptchef-20',
+              category: 'ingredient' as const,
+              relevance: 'medium' as const
+            });
+          }
+
+          if (dynamicProducts.length > 0) {
+            return dynamicProducts;
+          }
+        }
+
+        // Fallback to general products
+        return [
+          {
+            id: 'amz-knife-set',
+            title: 'Cuisinart 15-Piece Knife Set',
+            description: 'Professional-grade stainless steel knives with block',
+            price: '$79.99',
+            originalPrice: '$159.99',
+            discount: '50% OFF',
+            imageUrl: 'https://m.media-amazon.com/images/I/81cV-pZPTCL._AC_SL160_.jpg',
+            affiliateLink: 'https://www.amazon.com/dp/B00GIBKC3K?tag=receiptchef-20',
+            category: 'kitchen-tool' as const,
+            relevance: 'high' as const
+          },
+          {
+            id: 'amz-instant-pot',
+            title: 'Instant Pot Duo 7-in-1',
+            description: 'Electric pressure cooker, slow cooker, rice cooker & more',
+            price: '$89.95',
+            originalPrice: '$119.99',
+            discount: '25% OFF',
+            imageUrl: 'https://m.media-amazon.com/images/I/71V1LrY1MSL._AC_SL160_.jpg',
+            affiliateLink: 'https://www.amazon.com/dp/B06Y1YD5W7?tag=receiptchef-20',
+            category: 'appliance' as const,
+            relevance: 'high' as const
+          },
+          {
+            id: 'amz-mixing-bowls',
+            title: 'Stainless Steel Mixing Bowl Set',
+            description: 'Set of 6 nesting bowls with lids',
+            price: '$29.99',
+            originalPrice: '$49.99',
+            discount: '40% OFF',
+            imageUrl: 'https://m.media-amazon.com/images/I/71Uu52vLXSL._AC_SL160_.jpg',
+            affiliateLink: 'https://www.amazon.com/dp/B01HTYH8YA?tag=receiptchef-20',
+            category: 'kitchen-tool' as const,
+            relevance: 'medium' as const
+          }
+        ];
+      };
+
+      const mockProducts = getDynamicProducts();
 
     // Filter and sort products based on context and relevance
     let filteredProducts = [...mockProducts];
@@ -149,7 +246,7 @@ export default function AffiliateRecommendations({
 
     // Sort by relevance
     filteredProducts.sort((a, b) => {
-      const relevanceOrder = { high: 3, medium: 2, low: 1 };
+      const relevanceOrder: Record<string, number> = { high: 3, medium: 2, low: 1 };
       return (relevanceOrder[b.relevance || 'low'] - relevanceOrder[a.relevance || 'low']);
     });
 
