@@ -276,9 +276,56 @@ export default function Home() {
     setIsModalOpen(true);
   };
 
-  const generateMoreRecipes = () => {
-    console.log('Generate more recipes clicked');
-    // todo: remove mock functionality - In real app, this would call API
+  const generateMoreRecipes = async () => {
+    if (ingredients.length === 0) {
+      toast({
+        title: 'No ingredients available',
+        description: 'Add ingredients first to generate more recipes.',
+        variant: 'destructive'
+      });
+      return;
+    }
+
+    try {
+      setIsGeneratingMealPlans(true);
+      const response = await fetch('/api/meal-plans/generate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ingredients })
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(errorText);
+      }
+
+      const data = await response.json();
+      const newMealPlans: MealPlan[] = data.mealPlans || [];
+
+      // Add new meal plans to existing ones
+      setMealPlans(prevMealPlans => [...prevMealPlans, ...newMealPlans]);
+
+      // Add new recipes to existing ones
+      const newRecipes: Recipe[] = [];
+      newMealPlans.forEach((mealPlan) => {
+        newRecipes.push(...mealPlan.recipes);
+      });
+      setRecipes(prevRecipes => [...prevRecipes, ...newRecipes]);
+
+      toast({
+        title: 'More recipes generated!',
+        description: `Added ${newRecipes.length} new recipe${newRecipes.length === 1 ? '' : 's'} to your collection.`
+      });
+    } catch (error) {
+      console.error('Error generating more recipes:', error);
+      toast({
+        title: 'Failed to generate more recipes',
+        description: 'Please try again later.',
+        variant: 'destructive'
+      });
+    } finally {
+      setIsGeneratingMealPlans(false);
+    }
   };
 
   return (
@@ -377,9 +424,10 @@ export default function Home() {
             {/* Mobile: Stack all components, Desktop: 1/3 - 2/3 layout */}
             <div className="space-y-6 md:space-y-0 md:grid md:grid-cols-1 lg:grid-cols-3 md:gap-8">
               <div className="order-1 lg:order-1 lg:col-span-1">
-                <IngredientsList 
+                <IngredientsList
                   ingredients={ingredients}
                   onIngredientsChange={handleIngredientsChange}
+                  title={mealPlans.length > 0 ? "Your Ingredients (Add More Below)" : "Detected Ingredients"}
                 />
                 {ingredients.length > 0 && (
                   <div className="mt-4 space-y-3">
@@ -424,8 +472,25 @@ export default function Home() {
                       </>
                     ) : (
                       mealPlans.length > 0 && (
-                        <div className="rounded-lg bg-muted/40 p-3 text-xs sm:text-sm text-muted-foreground">
-                          Adjust the list above if you want to regenerate your meal plans.
+                        <div className="space-y-3">
+                          <div className="rounded-lg bg-muted/40 p-3 text-xs sm:text-sm text-muted-foreground">
+                            💡 <strong>Tip:</strong> Add more ingredients above to expand your recipe options, then use "Generate More" for additional variety.
+                          </div>
+                          <Button
+                            onClick={handleConfirmIngredients}
+                            disabled={isGeneratingMealPlans || isProcessing}
+                            variant="outline"
+                            className="w-full h-10"
+                          >
+                            {isGeneratingMealPlans ? (
+                              <span className="flex items-center justify-center">
+                                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                Updating...
+                              </span>
+                            ) : (
+                              'Update Recipes with New Ingredients'
+                            )}
+                          </Button>
                         </div>
                       )
                     )}
@@ -442,14 +507,22 @@ export default function Home() {
                         <Sparkles className="h-5 w-5 sm:h-6 sm:w-6 text-primary" />
                         Generated Recipes
                       </h2>
-                      <Button 
+                      <Button
                         onClick={generateMoreRecipes}
                         variant="outline"
                         className="w-full sm:w-auto"
                         size="default"
+                        disabled={isGeneratingMealPlans || isProcessing}
                         data-testid="button-generate-more"
                       >
-                        Generate More
+                        {isGeneratingMealPlans ? (
+                          <span className="flex items-center justify-center">
+                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                            Generating...
+                          </span>
+                        ) : (
+                          'Generate More'
+                        )}
                       </Button>
                     </div>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
