@@ -422,98 +422,59 @@ export default function Home() {
         {(ingredients.length > 0 || isProcessing) && (
           <section className="space-y-6 md:space-y-8">
             {/* Mobile: Stack all components, Desktop: 1/3 - 2/3 layout */}
-            <div className="space-y-6 md:space-y-0 md:grid md:grid-cols-1 lg:grid-cols-3 md:gap-8">
-              <div className="order-1 lg:order-1 lg:col-span-1">
-                <IngredientsList
-                  ingredients={ingredients}
-                  onIngredientsChange={handleIngredientsChange}
-                  title={mealPlans.length > 0 ? "Your Ingredients (Add More Below)" : "Detected Ingredients"}
-                />
-                {ingredients.length > 0 && (
-                  <div className="mt-4 space-y-3">
-                    {/* Show affiliate recommendation for ingredients context */}
-                    {ingredients.length > 5 && !needsConfirmation && mealPlans.length === 0 && (
-                      <AffiliateRecommendations
-                        context="ingredients"
-                        ingredients={ingredients}
-                        maxItems={1}
-                        title="Complete your pantry"
-                        className="mb-4"
-                      />
-                    )}
-                    {needsConfirmation ? (
-                      <>
-                        <div className="rounded-lg border border-dashed bg-muted/40 p-3 text-xs sm:text-sm text-muted-foreground">
-                          {confirmationConfig.reviewMessage}
-                        </div>
-                        <div className="flex flex-col gap-2 sm:flex-row">
-                          <Button
-                            onClick={handleConfirmIngredients}
-                            disabled={isGeneratingMealPlans || isProcessing}
-                            className="h-12 flex-1"
+            {/* Compact Ingredients Display for Mobile, Sidebar for Desktop */}
+            <div className={`${recipes.length > 0 ? 'md:grid md:grid-cols-1 lg:grid-cols-4 md:gap-6' : ''}`}>
+              {/* Ingredients Section */}
+              <div className={`${recipes.length > 0 ? 'lg:col-span-1' : ''} mb-6 md:mb-0`}>
+                {recipes.length > 0 ? (
+                  /* Compact view when recipes exist */
+                  <div className="space-y-3">
+                    <h3 className="font-semibold text-sm text-muted-foreground">Your Ingredients ({ingredients.length})</h3>
+                    <div className="flex flex-wrap gap-2">
+                      {ingredients.map((ingredient, index) => (
+                        <div key={index} className="flex items-center gap-1 bg-muted px-2 py-1 rounded-md text-xs">
+                          <span>{ingredient}</span>
+                          <button
+                            onClick={() => {
+                              const updated = ingredients.filter(item => item !== ingredient);
+                              handleIngredientsChange(updated);
+                            }}
+                            className="text-muted-foreground hover:text-destructive ml-1"
                           >
-                            {isGeneratingMealPlans ? (
-                              <span className="flex items-center justify-center">
-                                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                                Generating...
-                              </span>
-                            ) : (
-                              confirmationConfig.confirmButtonLabel
-                            )}
-                          </Button>
-                          <Button
-                            onClick={handleRemoveImage}
-                            variant="outline"
-                            className="h-12 flex-1"
-                          >
-                            Start Over
-                          </Button>
+                            ×
+                          </button>
                         </div>
-                      </>
-                    ) : (
-                      mealPlans.length > 0 && (
-                        <div className="space-y-3">
-                          <div className="rounded-lg bg-muted/40 p-3 text-xs sm:text-sm text-muted-foreground">
-                            💡 <strong>Tip:</strong> Add more ingredients above to expand your recipe options, then use "Generate More" for additional variety.
-                          </div>
-                          <Button
-                            onClick={handleConfirmIngredients}
-                            disabled={isGeneratingMealPlans || isProcessing}
-                            variant="outline"
-                            className="w-full h-10"
-                          >
-                            {isGeneratingMealPlans ? (
-                              <span className="flex items-center justify-center">
-                                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                                Updating...
-                              </span>
-                            ) : (
-                              'Update Recipes with New Ingredients'
-                            )}
-                          </Button>
-                        </div>
-                      )
-                    )}
+                      ))}
+                    </div>
+                    <IngredientsList
+                      ingredients={[]}
+                      onIngredientsChange={(newIngredients) => {
+                        if (newIngredients.length > 0) {
+                          handleIngredientsChange([...ingredients, ...newIngredients]);
+                        }
+                      }}
+                      title="Add More"
+                    />
                   </div>
+                ) : (
+                  /* Full view when no recipes */
+                  <IngredientsList
+                    ingredients={ingredients}
+                    onIngredientsChange={handleIngredientsChange}
+                  />
                 )}
-              </div>
 
-              {/* Generated Recipes */}
-              <div className="order-2 lg:order-2 lg:col-span-2 space-y-6">
-                {recipes.length > 0 && (
-                  <div>
-                    <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between mb-6">
-                      <h2 className="text-xl sm:text-2xl font-semibold flex items-center gap-2" data-testid="text-recipes-title">
-                        <Sparkles className="h-5 w-5 sm:h-6 sm:w-6 text-primary" />
-                        Generated Recipes
-                      </h2>
+                {/* Initial generation controls */}
+                {ingredients.length > 0 && needsConfirmation && (
+                  <div className="mt-4 space-y-3">
+                    <div className="rounded-lg border border-dashed bg-muted/40 p-3 text-xs sm:text-sm text-muted-foreground">
+                      {confirmationConfig.reviewMessage}
+                    </div>
+                    <div className="flex flex-col gap-2 sm:flex-row">
                       <Button
-                        onClick={generateMoreRecipes}
-                        variant="outline"
-                        className="w-full sm:w-auto"
-                        size="default"
+                        onClick={handleConfirmIngredients}
                         disabled={isGeneratingMealPlans || isProcessing}
-                        data-testid="button-generate-more"
+                        className="h-12 flex-1"
                       >
                         {isGeneratingMealPlans ? (
                           <span className="flex items-center justify-center">
@@ -521,9 +482,76 @@ export default function Home() {
                             Generating...
                           </span>
                         ) : (
-                          'Generate More'
+                          confirmationConfig.confirmButtonLabel
                         )}
                       </Button>
+                      <Button
+                        onClick={handleRemoveImage}
+                        variant="outline"
+                        className="h-12 flex-1"
+                      >
+                        Start Over
+                      </Button>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Generated Recipes */}
+              <div className={`${recipes.length > 0 ? 'lg:col-span-3' : ''} space-y-6`}>
+                {recipes.length > 0 && (
+                  <div>
+                    <div className="space-y-4">
+                      <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+                        <div>
+                          <h2 className="text-xl sm:text-2xl font-semibold flex items-center gap-2" data-testid="text-recipes-title">
+                            <Sparkles className="h-5 w-5 sm:h-6 sm:w-6 text-primary" />
+                            Generated Recipes
+                          </h2>
+                          <p className="text-sm text-muted-foreground mt-1">
+                            Based on {ingredients.length} ingredients
+                          </p>
+                        </div>
+                        <div className="flex flex-col sm:flex-row gap-2">
+                          <Button
+                            onClick={handleConfirmIngredients}
+                            variant="outline"
+                            size="default"
+                            disabled={isGeneratingMealPlans || isProcessing}
+                            className="w-full sm:w-auto"
+                          >
+                            {isGeneratingMealPlans ? (
+                              <span className="flex items-center justify-center">
+                                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                Updating...
+                              </span>
+                            ) : (
+                              'Update with New Ingredients'
+                            )}
+                          </Button>
+                          <Button
+                            onClick={generateMoreRecipes}
+                            variant="default"
+                            size="default"
+                            disabled={isGeneratingMealPlans || isProcessing}
+                            data-testid="button-generate-more"
+                          >
+                            {isGeneratingMealPlans ? (
+                              <span className="flex items-center justify-center">
+                                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                Adding...
+                              </span>
+                            ) : (
+                              'Add More Recipes'
+                            )}
+                          </Button>
+                        </div>
+                      </div>
+                      {ingredients.length > 0 && (
+                        <div className="text-xs text-muted-foreground bg-muted/40 rounded-lg p-3">
+                          💡 <strong>Tip:</strong> Add ingredients in the sidebar, then choose "Update" to replace current recipes or "Add More" to expand your collection.
+                        </div>
+                      )}
                     </div>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                       {recipes.map((recipe, index) => (

@@ -96,7 +96,7 @@ export default function AffiliateRecommendations({
               price: '$89.95',
               originalPrice: '$119.99',
               discount: '25% OFF',
-              imageUrl: 'https://via.placeholder.com/160x160/f0f0f0/666?text=Instant+Pot',
+              imageUrl: 'https://picsum.photos/160/160?random=1',
               affiliateLink: 'https://www.amazon.com/dp/B06Y1YD5W7?tag=receiptchef-20',
               category: 'appliance' as const,
               relevance: 'high' as const
@@ -111,7 +111,7 @@ export default function AffiliateRecommendations({
               price: '$99.99',
               originalPrice: '$129.99',
               discount: '23% OFF',
-              imageUrl: 'https://via.placeholder.com/160x160/f0f0f0/666?text=Air+Fryer',
+              imageUrl: 'https://picsum.photos/160/160?random=2',
               affiliateLink: 'https://www.amazon.com/dp/B07FDJMC9Q?tag=receiptchef-20',
               category: 'appliance' as const,
               relevance: 'high' as const
@@ -126,7 +126,7 @@ export default function AffiliateRecommendations({
               price: '$79.99',
               originalPrice: '$159.99',
               discount: '50% OFF',
-              imageUrl: 'https://via.placeholder.com/160x160/f0f0f0/666?text=Knife+Set',
+              imageUrl: 'https://picsum.photos/160/160?random=3',
               affiliateLink: 'https://www.amazon.com/dp/B00GIBKC3K?tag=receiptchef-20',
               category: 'kitchen-tool' as const,
               relevance: 'high' as const
@@ -141,7 +141,7 @@ export default function AffiliateRecommendations({
               price: '$29.99',
               originalPrice: '$49.99',
               discount: '40% OFF',
-              imageUrl: 'https://via.placeholder.com/160x160/f0f0f0/666?text=Mixing+Bowls',
+              imageUrl: 'https://picsum.photos/160/160?random=4',
               affiliateLink: 'https://www.amazon.com/dp/B01HTYH8YA?tag=receiptchef-20',
               category: 'kitchen-tool' as const,
               relevance: 'high' as const
@@ -156,7 +156,7 @@ export default function AffiliateRecommendations({
               price: '$45.99',
               originalPrice: '$65.99',
               discount: '30% OFF',
-              imageUrl: 'https://via.placeholder.com/160x160/f0f0f0/666?text=Baking+Set',
+              imageUrl: 'https://picsum.photos/160/160?random=5',
               affiliateLink: 'https://www.amazon.com/dp/B08XYZ123?tag=receiptchef-20',
               category: 'kitchen-tool' as const,
               relevance: 'high' as const
@@ -169,7 +169,7 @@ export default function AffiliateRecommendations({
               title: 'McCormick Gourmet Spice Set',
               description: 'Complete your spice collection for these recipes',
               price: '$39.99',
-              imageUrl: 'https://via.placeholder.com/160x160/f0f0f0/666?text=Spice+Set',
+              imageUrl: 'https://picsum.photos/160/160?random=6',
               affiliateLink: 'https://www.amazon.com/dp/B07BNQSFB7?tag=receiptchef-20',
               category: 'ingredient' as const,
               relevance: 'medium' as const
