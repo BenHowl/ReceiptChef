@@ -1,4 +1,5 @@
-import { Clock, Users, ChefHat } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { Clock, Users, ChefHat, Heart, HeartOff } from 'lucide-react';
 import { Card, CardContent, CardFooter, CardHeader } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -10,6 +11,61 @@ interface RecipeCardProps {
 }
 
 export default function RecipeCard({ recipe, onViewDetails }: RecipeCardProps) {
+  const [isSaved, setIsSaved] = useState(false);
+
+  useEffect(() => {
+    // Check if recipe is already saved via API
+    const checkSavedStatus = async () => {
+      try {
+        const response = await fetch(`/api/saved-recipes/${recipe.id}/status`);
+        if (response.ok) {
+          const { saved } = await response.json();
+          setIsSaved(saved);
+        }
+      } catch (error) {
+        console.error('Error checking recipe save status:', error);
+      }
+    };
+
+    checkSavedStatus();
+  }, [recipe.id]);
+
+  const toggleSaveRecipe = async () => {
+    try {
+      if (isSaved) {
+        // Remove from saved recipes
+        const response = await fetch(`/api/saved-recipes/${recipe.id}`, {
+          method: 'DELETE'
+        });
+
+        if (response.ok) {
+          setIsSaved(false);
+        } else {
+          console.error('Failed to delete saved recipe');
+        }
+      } else {
+        // Add to saved recipes
+        const response = await fetch('/api/saved-recipes', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(recipe)
+        });
+
+        if (response.ok) {
+          setIsSaved(true);
+        } else if (response.status === 409) {
+          // Recipe already saved
+          setIsSaved(true);
+        } else {
+          console.error('Failed to save recipe');
+        }
+      }
+    } catch (error) {
+      console.error('Error toggling recipe save status:', error);
+    }
+  };
   const getDifficultyColor = (difficulty: string) => {
     switch (difficulty) {
       case 'easy': return 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200';
@@ -77,9 +133,9 @@ export default function RecipeCard({ recipe, onViewDetails }: RecipeCardProps) {
         </div>
       </CardContent>
 
-      <CardFooter className="pt-3 md:pt-4">
-        <Button 
-          className="w-full min-h-11 text-sm md:text-base" 
+      <CardFooter className="pt-3 md:pt-4 flex gap-2">
+        <Button
+          className="flex-1 min-h-11 text-sm md:text-base"
           variant="outline"
           onClick={(e) => {
             e.stopPropagation();
@@ -89,6 +145,22 @@ export default function RecipeCard({ recipe, onViewDetails }: RecipeCardProps) {
           data-testid={`button-view-recipe-${recipe.id}`}
         >
           View Recipe
+        </Button>
+        <Button
+          variant={isSaved ? "default" : "outline"}
+          size="icon"
+          className="min-h-11 w-11"
+          onClick={(e) => {
+            e.stopPropagation();
+            toggleSaveRecipe();
+          }}
+          data-testid={`button-save-recipe-${recipe.id}`}
+        >
+          {isSaved ? (
+            <Heart className="h-4 w-4 fill-current" />
+          ) : (
+            <HeartOff className="h-4 w-4" />
+          )}
         </Button>
       </CardFooter>
     </Card>

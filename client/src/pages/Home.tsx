@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Upload, Sparkles, Calendar, Refrigerator, Loader2, X, Plus } from 'lucide-react';
+import { Upload, Sparkles, Calendar, Refrigerator, Loader2, X, Plus, BookOpen } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent } from '@/components/ui/card';
@@ -8,8 +8,8 @@ import IngredientsList from '@/components/IngredientsList';
 import RecipeCard from '@/components/RecipeCard';
 import MealPlanCard from '@/components/MealPlanCard';
 import RecipeModal from '@/components/RecipeModal';
+import RecipeBook from '@/components/RecipeBook';
 import ThemeToggle from '@/components/ThemeToggle';
-import AffiliateSettings from '@/components/AffiliateSettings';
 import AffiliateRecommendations from '@/components/AffiliateRecommendations';
 import { useToast } from '@/hooks/use-toast';
 import type { Recipe, MealPlan } from '@shared/schema';
@@ -71,6 +71,7 @@ const uploadModeConfig = {
 type UploadMode = keyof typeof uploadModeConfig;
 
 export default function Home() {
+  const [currentView, setCurrentView] = useState<'home' | 'recipe-book'>('home');
   const [uploadMode, setUploadMode] = useState<UploadMode>('receipt');
   const [uploadedImage, setUploadedImage] = useState<string | null>(null);
   const [processingSource, setProcessingSource] = useState<UploadMode | null>(null);
@@ -350,14 +351,25 @@ export default function Home() {
               </div>
             </div>
             <div className="flex items-center gap-2">
-              <AffiliateSettings />
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => setCurrentView(currentView === 'home' ? 'recipe-book' : 'home')}
+                className="h-9 w-9"
+                aria-label={currentView === 'home' ? 'View recipe book' : 'Back to home'}
+              >
+                <BookOpen className="h-4 w-4" />
+              </Button>
               <ThemeToggle />
             </div>
           </div>
         </div>
       </header>
 
-      <main className="px-4 py-6 md:py-8 md:max-w-7xl md:mx-auto md:px-6 lg:px-8">
+      {currentView === 'recipe-book' ? (
+        <RecipeBook onBack={() => setCurrentView('home')} />
+      ) : (
+        <main className="px-4 py-6 md:py-8 md:max-w-7xl md:mx-auto md:px-6 lg:px-8">
         {/* Hero Section - Mobile First */}
         <section className="text-center mb-6 md:mb-12">
           <div className="relative aspect-[4/3] sm:aspect-[3/2] md:aspect-[16/9] md:max-w-4xl mx-auto mb-6 md:mb-8 rounded-lg md:rounded-xl overflow-hidden">
@@ -718,7 +730,8 @@ export default function Home() {
             </div>
           </section>
         )}
-      </main>
+        </main>
+      )}
 
       {/* Recipe Modal */}
       <RecipeModal 

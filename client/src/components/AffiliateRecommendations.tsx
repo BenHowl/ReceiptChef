@@ -25,12 +25,8 @@ export default function AffiliateRecommendations({
   className = ''
 }: AffiliateRecommendationsProps) {
   const [products, setProducts] = useState<AffiliateProduct[]>([]);
-  const [isVisible, setIsVisible] = useState(true);
 
   useEffect(() => {
-    // Load affiliate preferences from localStorage
-    const hideAds = localStorage.getItem('hideAffiliateAds') === 'true';
-    setIsVisible(!hideAds);
 
     // Fetch products from API
     const fetchProducts = async () => {
@@ -257,7 +253,7 @@ export default function AffiliateRecommendations({
     fetchProducts();
   }, [context, recipeType, ingredients, recipes, maxItems]);
 
-  if (!isVisible || products.length === 0) {
+  if (products.length === 0) {
     return null;
   }
 
@@ -274,22 +270,10 @@ export default function AffiliateRecommendations({
   return (
     <Card className={`bg-accent/5 border-accent/10 ${className}`}>
       <CardHeader className="pb-3 md:pb-4">
-        <div className="flex items-center justify-between">
-          <CardTitle className="text-base md:text-lg flex items-center gap-2">
-            <ShoppingBag className="h-4 w-4 md:h-5 md:w-5 text-accent-foreground/70" />
-            <span>{title || defaultTitle}</span>
-          </CardTitle>
-          <button
-            onClick={() => {
-              setIsVisible(false);
-              localStorage.setItem('hideAffiliateAds', 'true');
-            }}
-            className="text-xs text-muted-foreground hover:text-foreground transition-colors"
-            aria-label="Hide recommendations"
-          >
-            Hide
-          </button>
-        </div>
+        <CardTitle className="text-base md:text-lg flex items-center gap-2">
+          <ShoppingBag className="h-4 w-4 md:h-5 md:w-5 text-accent-foreground/70" />
+          <span>{title || defaultTitle}</span>
+        </CardTitle>
         {(subtitle || defaultSubtitle) && (
           <p className="text-xs md:text-sm text-muted-foreground mt-1">
             {subtitle || defaultSubtitle}

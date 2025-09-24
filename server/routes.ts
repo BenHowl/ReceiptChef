@@ -3,9 +3,10 @@ import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { ObjectStorageService, ObjectNotFoundError } from "./objectStorage";
 import { extractIngredientsFromFridge, extractIngredientsFromReceipt, generateRecipesFromIngredients } from "./openai";
-import { insertReceiptSchema } from "@shared/schema";
+import { insertReceiptSchema, savedRecipes, insertSavedRecipeSchema, type Recipe } from "@shared/schema";
 import { z } from "zod";
 import { affiliateService } from "./services/affiliateService";
+import { eq, and, sql } from "drizzle-orm";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Validate object storage environment variables at startup
@@ -246,6 +247,106 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ error: "Failed to get product recommendations" });
     }
   };
+
+  // Saved Recipes Routes
+  // For now, using a temporary user ID until authentication is implemented
+  const TEMP_USER_ID = "temp-user-123";
+
+  // Get all saved recipes for user
+  app.get("/api/saved-recipes", async (req, res) => {
+    try {
+      const userSavedRecipes = await storage.select()
+        .from(savedRecipes)
+        .where(eq(savedRecipes.userId, TEMP_USER_ID))
+        .orderBy(savedRecipes.createdAt);
+
+      res.json(userSavedRecipes.map(sr => sr.recipe));
+    } catch (error) {
+      console.error("Error fetching saved recipes:", error);
+      res.status(500).json({ error: "Failed to fetch saved recipes" });
+    }
+  });
+
+  // Save a recipe
+  app.post("/api/saved-recipes", async (req, res) => {
+    try {
+      const recipe: Recipe = req.body;
+
+      if (!recipe || !recipe.id) {
+        return res.status(400).json({ error: "Valid recipe required" });
+      }
+
+      // Check if recipe is already saved
+      const existing = await storage.select()
+        .from(savedRecipes)
+        .where(and(
+          eq(savedRecipes.userId, TEMP_USER_ID),
+          sql`${savedRecipes.recipe}->>'id' = ${recipe.id}`
+        ))
+        .limit(1);
+
+      if (existing.length > 0) {
+        return res.status(409).json({ error: "Recipe already saved" });
+      }
+
+      // Save the recipe
+      await storage.insert(savedRecipes).values({
+        userId: TEMP_USER_ID,
+        recipe: recipe
+      });
+
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Error saving recipe:", error);
+      res.status(500).json({ error: "Failed to save recipe" });
+    }
+  });
+
+  // Delete a saved recipe
+  app.delete("/api/saved-recipes/:recipeId", async (req, res) => {
+    try {
+      const { recipeId } = req.params;
+
+      if (!recipeId) {
+        return res.status(400).json({ error: "Recipe ID required" });
+      }
+
+      await storage.delete(savedRecipes)
+        .where(and(
+          eq(savedRecipes.userId, TEMP_USER_ID),
+          sql`${savedRecipes.recipe}->>'id' = ${recipeId}`
+        ));
+
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Error deleting saved recipe:", error);
+      res.status(500).json({ error: "Failed to delete recipe" });
+    }
+  });
+
+  // Check if a recipe is saved
+  app.get("/api/saved-recipes/:recipeId/status", async (req, res) => {
+    try {
+      const { recipeId } = req.params;
+
+      if (!recipeId) {
+        return res.status(400).json({ error: "Recipe ID required" });
+      }
+
+      const saved = await storage.select()
+        .from(savedRecipes)
+        .where(and(
+          eq(savedRecipes.userId, TEMP_USER_ID),
+          sql`${savedRecipes.recipe}->>'id' = ${recipeId}`
+        ))
+        .limit(1);
+
+      res.json({ saved: saved.length > 0 });
+    } catch (error) {
+      console.error("Error checking recipe status:", error);
+      res.status(500).json({ error: "Failed to check recipe status" });
+    }
+  });
 
   app.get("/api/affiliate/products", handleAffiliateProducts);
   app.post("/api/affiliate/products", handleAffiliateProducts);

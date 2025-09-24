@@ -17,6 +17,13 @@ export const receipts = pgTable("receipts", {
   createdAt: timestamp("created_at").defaultNow(),
 });
 
+export const savedRecipes = pgTable("saved_recipes", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").notNull().references(() => users.id),
+  recipe: json("recipe").$type<Recipe>().notNull(),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
 export const insertUserSchema = createInsertSchema(users).pick({
   username: true,
   password: true,
@@ -24,6 +31,11 @@ export const insertUserSchema = createInsertSchema(users).pick({
 
 export const insertReceiptSchema = createInsertSchema(receipts).pick({
   imageUrl: true,
+});
+
+export const insertSavedRecipeSchema = createInsertSchema(savedRecipes).pick({
+  userId: true,
+  recipe: true,
 });
 
 // Types for meal plans and recipes
@@ -51,3 +63,5 @@ export type InsertUser = z.infer<typeof insertUserSchema>;
 export type User = typeof users.$inferSelect;
 export type InsertReceipt = z.infer<typeof insertReceiptSchema>;
 export type Receipt = typeof receipts.$inferSelect;
+export type InsertSavedRecipe = z.infer<typeof insertSavedRecipeSchema>;
+export type SavedRecipe = typeof savedRecipes.$inferSelect;
