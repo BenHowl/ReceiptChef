@@ -484,7 +484,7 @@ export default function Home() {
                               const updated = ingredients.filter(item => item !== ingredient);
                               handleIngredientsChange(updated);
                             }}
-                            className="p-1 hover:bg-destructive/10 hover:text-destructive rounded transition-colors"
+                            className="h-10 w-10 md:h-8 md:w-8 hover:bg-destructive/10 hover:text-destructive rounded transition-colors shrink-0 flex items-center justify-center"
                             aria-label={`Remove ${ingredient}`}
                           >
                             <X className="h-4 w-4" />
