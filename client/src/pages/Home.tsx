@@ -460,7 +460,7 @@ export default function Home() {
                     </div>
 
                     {/* Ingredients list */}
-                    <div className="space-y-2 max-h-64 overflow-y-auto md:max-w-4xl mx-auto">
+                    <div className="space-y-2 max-h-64 overflow-y-auto">
                       {ingredients.map((ingredient, index) => (
                         <div
                           key={index}
@@ -482,7 +482,7 @@ export default function Home() {
                     </div>
 
                     {/* Add ingredient input */}
-                    <div className="pt-3 border-t md:max-w-4xl mx-auto">
+                    <div className="pt-3 border-t">
                       <div className="flex gap-2">
                         <Input
                           placeholder="Add ingredient..."
@@ -513,10 +513,12 @@ export default function Home() {
                   </div>
                 ) : (
                   /* Full view when no recipes */
-                  <IngredientsList
-                    ingredients={ingredients}
-                    onIngredientsChange={handleIngredientsChange}
-                  />
+                  <div className="md:max-w-4xl mx-auto">
+                    <IngredientsList
+                      ingredients={ingredients}
+                      onIngredientsChange={handleIngredientsChange}
+                    />
+                  </div>
                 )}
 
                 {/* Initial generation controls */}
