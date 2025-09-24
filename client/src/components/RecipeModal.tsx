@@ -173,16 +173,8 @@ export default function RecipeModal({ recipe, isOpen, onClose }: RecipeModalProp
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="max-w-2xl max-h-[90vh]" data-testid="modal-recipe-details">
         <DialogHeader>
-          <DialogTitle className="flex items-center justify-between">
-            <span data-testid="text-modal-recipe-title">{recipe.title}</span>
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={onClose}
-              data-testid="button-close-modal"
-            >
-              <X className="h-4 w-4" />
-            </Button>
+          <DialogTitle data-testid="text-modal-recipe-title">
+            {recipe.title}
           </DialogTitle>
         </DialogHeader>
         <ScrollArea className="max-h-[70vh] pr-4">
