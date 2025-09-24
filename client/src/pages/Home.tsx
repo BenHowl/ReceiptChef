@@ -460,7 +460,7 @@ export default function Home() {
                     </div>
 
                     {/* Ingredients list */}
-                    <div className="space-y-2 max-h-64 overflow-y-auto max-w-md mx-auto sm:max-w-lg md:max-w-xl lg:max-w-2xl">
+                    <div className="space-y-2 max-h-64 overflow-y-auto md:max-w-4xl mx-auto">
                       {ingredients.map((ingredient, index) => (
                         <div
                           key={index}
@@ -482,7 +482,7 @@ export default function Home() {
                     </div>
 
                     {/* Add ingredient input */}
-                    <div className="pt-3 border-t max-w-md mx-auto sm:max-w-lg md:max-w-xl lg:max-w-2xl">
+                    <div className="pt-3 border-t md:max-w-4xl mx-auto">
                       <div className="flex gap-2">
                         <Input
                           placeholder="Add ingredient..."
