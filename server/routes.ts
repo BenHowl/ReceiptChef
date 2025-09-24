@@ -1,12 +1,13 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
+import { db } from "./db";
 import { ObjectStorageService, ObjectNotFoundError } from "./objectStorage";
 import { extractIngredientsFromFridge, extractIngredientsFromReceipt, generateRecipesFromIngredients } from "./openai";
 import { insertReceiptSchema, savedRecipes, insertSavedRecipeSchema, type Recipe } from "@shared/schema";
 import { z } from "zod";
 import { affiliateService } from "./services/affiliateService";
-import { eq, and, sql } from "drizzle-orm";
+import { eq, and, sql, desc } from "drizzle-orm";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Validate object storage environment variables at startup
@@ -255,10 +256,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Get all saved recipes for user
   app.get("/api/saved-recipes", async (req, res) => {
     try {
-      const userSavedRecipes = await storage.select()
+      const userSavedRecipes = await db.select()
         .from(savedRecipes)
         .where(eq(savedRecipes.userId, TEMP_USER_ID))
-        .orderBy(savedRecipes.createdAt);
+        .orderBy(desc(savedRecipes.createdAt));
 
       res.json(userSavedRecipes.map(sr => sr.recipe));
     } catch (error) {
@@ -277,7 +278,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       // Check if recipe is already saved
-      const existing = await storage.select()
+      const existing = await db.select()
         .from(savedRecipes)
         .where(and(
           eq(savedRecipes.userId, TEMP_USER_ID),
@@ -290,7 +291,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       // Save the recipe
-      await storage.insert(savedRecipes).values({
+      await db.insert(savedRecipes).values({
         userId: TEMP_USER_ID,
         recipe: recipe
       });
@@ -311,7 +312,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ error: "Recipe ID required" });
       }
 
-      await storage.delete(savedRecipes)
+      await db.delete(savedRecipes)
         .where(and(
           eq(savedRecipes.userId, TEMP_USER_ID),
           sql`${savedRecipes.recipe}->>'id' = ${recipeId}`
@@ -333,7 +334,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ error: "Recipe ID required" });
       }
 
-      const saved = await storage.select()
+      const saved = await db.select()
         .from(savedRecipes)
         .where(and(
           eq(savedRecipes.userId, TEMP_USER_ID),

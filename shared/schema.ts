@@ -19,7 +19,7 @@ export const receipts = pgTable("receipts", {
 
 export const savedRecipes = pgTable("saved_recipes", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
-  userId: varchar("user_id").notNull().references(() => users.id),
+  userId: varchar("user_id").notNull(),
   recipe: json("recipe").$type<Recipe>().notNull(),
   createdAt: timestamp("created_at").defaultNow(),
 });
