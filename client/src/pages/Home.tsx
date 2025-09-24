@@ -535,7 +535,7 @@ export default function Home() {
 
                 {/* Initial generation controls */}
                 {ingredients.length > 0 && needsConfirmation && (
-                  <div className="mt-4 space-y-3">
+                  <div className="mt-4 space-y-3 md:max-w-4xl mx-auto">
                     <div className="rounded-lg border border-dashed bg-muted/40 p-3 text-xs sm:text-sm text-muted-foreground">
                       {confirmationConfig.reviewMessage}
                     </div>
